@@ -351,20 +351,28 @@ const GraphVis: React.FC<Props> = (props) => {
           ctxRenderer: ({ ctx, x, y, state: { selected, hover }, style, label }) => {
               const r = style.size;
               const color = style.color;
-              let displayLabel = false;
-              if(network && network.getScale() > 0.7) {
-                displayLabel = true;
-              }
-              const radius = displayLabel ? r*2 : r;
-              const imagePositionY = displayLabel ? y-30 : y-15;
+              // if(network && network.getScale() > 0.7) {
+              //   console.log("network.getScale()",network.getScale())
+              //   displayLabel = true;
+              // }
+              // const radius = displayLabel ? r*2 : r;
+              // const imagePositionY = displayLabel ? y-30 : y-15;
               const drawNode = () => {
+                let scale = props.hubCentralConfig?.modeling?.scale ? props.hubCentralConfig?.modeling?.scale : 0.5;
+                if(network) {
+                    scale = network.getScale();
+                  }
+                //let scale = network.getScale();
+                let displayLabel = scale > 0.5;
+                const radius = displayLabel ? r*2 : r;
+                const imagePositionY = displayLabel ? y-30 : y-15;
                   ctx.beginPath();
                   ctx.arc(x,y,radius,0,2*Math.PI);
                   ctx.fillStyle = !hover ? color: "#7FADE3";
                   ctx.fill();
                   ctx.lineWidth = 0.2;
                   if(selected){
-                    ctx.strokeStyle = '#44499c';
+                    ctx.strokeStyle = '#5B69AF';
                     ctx.lineWidth = 4;
                   }
                   ctx.stroke();
@@ -375,13 +383,24 @@ const GraphVis: React.FC<Props> = (props) => {
                     ctx.textBaseline = "middle";
                     ctx.fillText(entityName, x, y+10);
                   }
-                  var img = new Image();   // Create new img element
+                  if(scale > 0.3) {
+                    var img = new Image();   // Create new img element
 
-                  //Can be modified to use the icons from HC Config.
-                  //img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFYAAABQCAYAAACDD4LqAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAA1dJREFUeJzt3E9oFHcYxvHnmRnFlNCDxpKC4B+iK3uoFSKhJ6GXooK4EaSgssaC0qIWPCheGjx6lHpsMQEPYVu2oiAetNWrpRjEQ1YEiQdFsCrYgN3szNOLEZLsGiF559dd3s9xh/29L1+WSXZhl3irWPmuO02mzkk4QjKB+3DSc4FnHgyO/AxCAEAAKFa+WZkm6Q0AW4Mu2OYkXXgwOHoChCIIbCSNMXjURSN5rFAtHwMAFn4r74X4a+ilOoWgf5JGsjaCcDj0Mp2EYHeaNPYlEgfI2RcF1AkciOP4bpj1/v9SKVaafkvy+7nXJA4kJFbNf5pu1wZHf8ljwXbWd+346fjN63lhAfVEzZ5AsG69VCd4uPPHf5s9TpJNw7rF87BGPKwRD2vEwxrxsEY8rBEPa8TDGvGwRjysEQ9rxMMa8bBGPKwRD2vEwxrxsEY8rBEPa8TDGvGwRjysEQ9rxMMa8bBGPKwRD2vEwxrxsEY8rBEPa8TDGvGwRjyskRZhxeaPu1mGh1u+MFtcYH+xUu612qdTbN4yuafVtVZfRv4kTfioUC0/gSijvdqaqETA2lbX3/ct7xUAN8BvCk1xgTD+x8uIhzXiYY14WCMe1oiHNeJhjXhYIxEEf2e11KRGJOpx6D06jcjHEYDfQy/SaajsRiRF5/12sHQk1XpXrr8Wv6iMP+v5+vMYwPbQS7U7QdOMWPprx/nJGAD+Hhu/1TOx5WOAX4Rerl1JmGLEfbXSyE1g5t8tQrXB0ZNZhl0Q7gTdsM0IqAMYk/hZrTRydebxph8qFivl3iyJCpmyLsulSBwHuNPibEk/APjT4ux3M+LoZVfX9P17X12amnst6MfYheqhKoCSyeHi4dreixdNzv4A4d55CQS0zW5AZnj2woKF3VQ91A9wjdX5Ivds/2M42A8MBwtL4Kjx+Z8+fTm5y3LG+wQJ21cZWg1iv/UcQiesZ7QSJGwc6ySAFfaT+OXGy0MD9nPmyz3spitHepTjKylKNZzXrFlz8x7IRn03yY/yG4gdfZWh1bnNeyv/W0GGN/kOVDa9LJvOd2aAsN3Ll18GMJHXPIEXJkujr/KaNyPIO6/N1YOrpPiUoCI59xfCl0yd1PWJ8XU/4ezZzGiGc84559wC/gPRlNqadvfzLQAAAABJRU5ErkJggg=="
-                  img.src = getIcons[e.entityName] ? getIcons[e.entityName] : getIcons["Others"];
-                  //Drawing the image on canvas
-                  ctx.drawImage(img,x-15,imagePositionY,30,28);
+                    //Can be modified to use the icons from HC Config.
+                    //img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFYAAABQCAYAAACDD4LqAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAA1dJREFUeJzt3E9oFHcYxvHnmRnFlNCDxpKC4B+iK3uoFSKhJ6GXooK4EaSgssaC0qIWPCheGjx6lHpsMQEPYVu2oiAetNWrpRjEQ1YEiQdFsCrYgN3szNOLEZLsGiF559dd3s9xh/29L1+WSXZhl3irWPmuO02mzkk4QjKB+3DSc4FnHgyO/AxCAEAAKFa+WZkm6Q0AW4Mu2OYkXXgwOHoChCIIbCSNMXjURSN5rFAtHwMAFn4r74X4a+ilOoWgf5JGsjaCcDj0Mp2EYHeaNPYlEgfI2RcF1AkciOP4bpj1/v9SKVaafkvy+7nXJA4kJFbNf5pu1wZHf8ljwXbWd+346fjN63lhAfVEzZ5AsG69VCd4uPPHf5s9TpJNw7rF87BGPKwRD2vEwxrxsEY8rBEPa8TDGvGwRjysEQ9rxMMa8bBGPKwRD2vEwxrxsEY8rBEPa8TDGvGwRjysEQ9rxMMa8bBGPKwRD2vEwxrxsEY8rBEPa8TDGvGwRjyskRZhxeaPu1mGh1u+MFtcYH+xUu612qdTbN4yuafVtVZfRv4kTfioUC0/gSijvdqaqETA2lbX3/ct7xUAN8BvCk1xgTD+x8uIhzXiYY14WCMe1oiHNeJhjXhYIxEEf2e11KRGJOpx6D06jcjHEYDfQy/SaajsRiRF5/12sHQk1XpXrr8Wv6iMP+v5+vMYwPbQS7U7QdOMWPprx/nJGAD+Hhu/1TOx5WOAX4Rerl1JmGLEfbXSyE1g5t8tQrXB0ZNZhl0Q7gTdsM0IqAMYk/hZrTRydebxph8qFivl3iyJCpmyLsulSBwHuNPibEk/APjT4ux3M+LoZVfX9P17X12amnst6MfYheqhKoCSyeHi4dreixdNzv4A4d55CQS0zW5AZnj2woKF3VQ91A9wjdX5Ivds/2M42A8MBwtL4Kjx+Z8+fTm5y3LG+wQJ21cZWg1iv/UcQiesZ7QSJGwc6ySAFfaT+OXGy0MD9nPmyz3spitHepTjKylKNZzXrFlz8x7IRn03yY/yG4gdfZWh1bnNeyv/W0GGN/kOVDa9LJvOd2aAsN3Ll18GMJHXPIEXJkujr/KaNyPIO6/N1YOrpPiUoCI59xfCl0yd1PWJ8XU/4ezZzGiGc84559wC/gPRlNqadvfzLQAAAABJRU5ErkJggg=="
+                    img.src = getIcons[e.entityName] ? getIcons[e.entityName] : getIcons["Others"];
+                    //Drawing the image on canvas
+                    ctx.drawImage(img,x-15,imagePositionY,30,28);
+                  }
+                  
+                  let expandable = true; // Use this to display ellipsis, when node has connected relationships
+                  if(expandable) {
+                    var ellipsisImg = new Image();
+                    ellipsisImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD8AAABQCAYAAACu/a1QAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAnZJREFUeJzt189LVHEUBfBzv05SIqUIhS1q3apVCGlBpgkJisoM/QdtzHKUxJWbSEGaWgVB0K5FqSC4CCenxjZFGyFqIQW1CaWg0VSIee+dNgU1Pp0fbxHh+Szvvd/D9z7eWzxARERERERERERERERERP4FA4BUx3QjfE4Q6DJYXdFTxCYNadJGhhd6l3cbvd02c4IMJgi0mVlN8Wx+A2zW8/zR69nEym6jqfapZtJuGHEahuqi2cAKgIfVeX+sP5vYsFTHdCN9vDTgWAmH/74nmDOfLcln8bdh/VsXpk/Cx6IZDpabDeCTC2JN1zLdq6HZbVMXDZgFLFZuMIlX2PTPOficqGRxADBYHZ27u+OAj3sVLg4Ax33n3QxrjMUfVYO4X8niAGCGJtRWDTgCXRVe7nfQ2fHOufrC+p3W2SNmaIqSDbA7rHoo506ZWWOUZAO6XEnfeBHV+a2GwpoXy297IOUy2LZcAAgCFzmbQIOLGvI/0/J7lZbfq7T8XrXHlyc2o4bEHNYKa+YF36PmklgPq5shcjbAdUdDOlIEuXT1SeJLYT2ZiX8G8C5KNozzYeXa/bHXwPYHXhYi7UgbIZir7DzyRg6E9QxGGK4A9CrLZg4uGA3rXZ7r2iIwWEnur/QPzquadMMLvcvms4XEYlnHySULgvPJTPzFTjPJdF/GyHaAb8rKBp4HQdA8NJ94v9PM0NO+BwF5ieTH0u8Mn+QMquzMYLYnZ382xzvn6sN+UgrFHNbCXvXdTLZPH3bmF/29dT/2fR3M9pT8JhK0VOvjo4jhwG5zfj7GmsBb7c8mNkrNFhEREREREREREREREREREZFK/QT3i+BFtIzcWAAAAABJRU5ErkJggg=="
+                    ctx.fillStyle = "black";
+                    ctx.globalCompositeOperation = "color";
+                    ctx.drawImage(ellipsisImg,x,y+20,14,14);
+                  }
               };
               ctx.save();
               ctx.restore();
