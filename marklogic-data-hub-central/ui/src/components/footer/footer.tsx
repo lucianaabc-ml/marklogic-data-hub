@@ -1,5 +1,4 @@
 import React from "react";
-import {Layout} from "antd";
 import styles from "./footer.module.scss";
 
 const Footer = (props) => {
@@ -16,7 +15,7 @@ const Footer = (props) => {
   };
 
   return (
-    <Layout.Footer>
+    <div className={styles.footerContainer}>
       <div className={styles.content} style={footerStyle}>
         <span>© {currentYear} MarkLogic Corporation</span>
         |
@@ -24,7 +23,7 @@ const Footer = (props) => {
           <a className={styles.linkStyle} tabIndex={-1} ref={linkRef} href="https://www.marklogic.com/privacy/" style={linkStyle}>Privacy</a>
         </span>
       </div>
-    </Layout.Footer>
+    </div>
   );
 };
 

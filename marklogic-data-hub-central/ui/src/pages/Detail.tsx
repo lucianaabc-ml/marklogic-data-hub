@@ -389,8 +389,8 @@ const Detail: React.FC<Props> = ({history, location}) => {
     </div> :
 
       entityInstanceDocument ?
-        <Layout>
-          <Content className={styles.detailContent}>
+        <div className={styles.layout}>
+          <div className={styles.detailContent}>
             <Row id="back-button" className={"py-4 header-heading-title"} onClick={() => history.push(selectedSearchOptions)}>
               <Col>
                 <span className={`d-flex align-items-center cursor-pointer ${styles.title}`}><ArrowLeftShort aria-label="Back" className={"d-inline-block me-2 fs-2 header-back-button"} />Back to results</span>
@@ -492,8 +492,8 @@ const Detail: React.FC<Props> = ({history, location}) => {
               return block;
             })()}</div>
             <div></div>
-          </Content>
-        </Layout> :
+          </div>
+        </div> :
         <DetailPageNonEntity
           uri={uri}
           sourcesTableData={sourcesTableData}

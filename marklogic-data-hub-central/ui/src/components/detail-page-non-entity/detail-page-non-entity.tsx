@@ -12,6 +12,7 @@ import {xmlFormatter, jsonFormatter} from "../../util/record-parser";
 import {getRecord} from "../../api/record";
 import HCTooltip from "../common/hc-tooltip/hc-tooltip";
 import {ArrowLeftShort, Download} from "react-bootstrap-icons";
+import HCSider from "../common/hc-side/hc-side";
 
 const DetailPageNonEntity = (props) => {
   const history: any = useHistory();
@@ -188,7 +189,7 @@ const DetailPageNonEntity = (props) => {
   const contentElements = props.isLoading || user.error.type === "ALERT" ? <div style={{marginTop: "40px"}}><AsyncLoader /></div> : displayRecord(props.contentType);
 
   const viewSelector = <div id="menu" className={styles.menu}>
-    <Tabs onSelect={(event) => handleMenuSelect(event)}  className="border-0 ms-0">
+    <Tabs onSelect={(event) => handleMenuSelect(event)} className="border-0 ms-0">
       <Tab eventKey="record" key="record" id="record" data-testid="record-view" tabClassName={`${styles.tabActive} ${selected === "record" && styles.active}`}
         title={
           <HCTooltip text="Show the complete record" id="complete-record-tooltip" placement="top">
@@ -251,8 +252,8 @@ const DetailPageNonEntity = (props) => {
 
   return (
     <div id="detailPageNonEntityContainer" className={styles.container}>
-      <Layout>
-        <Content className={styles.detailContentNonEntityInstance}>
+      <div className={styles.layout}>
+        <div className={styles.detailContentNonEntityInstance}>
           <div className={styles.detailContentNonEntityHeader}>
             <Row id="back-button" className={"p-4 header-heading-title"} onClick={() => history.push(props.selectedSearchOptions)}>
               <Col>
@@ -266,20 +267,17 @@ const DetailPageNonEntity = (props) => {
           </div>
           <div>{nonEntityMenu()}</div>
           <div className={styles.download}>
-            <a data-testid="download-link" onClick={download}><Download className={styles.downloadIcon}/> <span>{displayFileSize()}</span></a>
+            <a data-testid="download-link" onClick={download}><Download className={styles.downloadIcon} /> <span>{displayFileSize()}</span></a>
           </div>
           <div className={styles.documentContainer}>
             <div className={styles.contentElements}>{contentElements}</div>
           </div>
-        </Content>
-        <Sider
-          trigger={null}
-          collapsedWidth={0}
-          collapsible
-          collapsed={metadataCollapse}
+        </div>
+        <HCSider
+          show={true}
           width={"45vw"}
+          placement="right"
           data-testid="sider-nonEntityDetailPage"
-          className={styles.siderParent}
         >
 
           <div className={styles.siderContainerNonEntity}>
@@ -311,24 +309,24 @@ const DetailPageNonEntity = (props) => {
             </div>
             {
               (props.collections) &&
-                <div className={styles.collectionsTableContainer}>
-                  <div className={styles.collectionsTableLabel} data-testid="entity-collections-label">Collections</div>
-                  <Table bordered dataSource={props.collections} columns={collectionColumns} className={styles.collectionsTable} data-testid="collections-table"/>
-                </div>
+              <div className={styles.collectionsTableContainer}>
+                <div className={styles.collectionsTableLabel} data-testid="entity-collections-label">Collections</div>
+                <Table bordered dataSource={props.collections} columns={collectionColumns} className={styles.collectionsTable} data-testid="collections-table" />
+              </div>
             }
             {
               (props.recordPermissions) &&
-                <div className={styles.recordPermissionsTableContainer}>
-                  <div className={styles.recordPermissionsTableLabel} data-testid="entity-record-permissions-label">Permissions</div>
-                  <Table bordered dataSource={props.recordPermissions} columns={recordPermissionsColumns} className={styles.recordPermissionsTable} data-testid="record-permissions-table"/>
-                </div>
+              <div className={styles.recordPermissionsTableContainer}>
+                <div className={styles.recordPermissionsTableLabel} data-testid="entity-record-permissions-label">Permissions</div>
+                <Table bordered dataSource={props.recordPermissions} columns={recordPermissionsColumns} className={styles.recordPermissionsTable} data-testid="record-permissions-table" />
+              </div>
             }
             {
               (props.recordMetadata) &&
-                <div className={styles.recordMetadataTableContainer}>
-                  <div className={styles.recordMetadataTableLabel} data-testid="entity-record-metadata-label">Metadata Values</div>
-                  <Table bordered dataSource={props.recordMetadata} columns={recordMetadataColumns} className={styles.recordMetadataTable} data-testid="record-metadata-table"/>
-                </div>
+              <div className={styles.recordMetadataTableContainer}>
+                <div className={styles.recordMetadataTableLabel} data-testid="entity-record-metadata-label">Metadata Values</div>
+                <Table bordered dataSource={props.recordMetadata} columns={recordMetadataColumns} className={styles.recordMetadataTable} data-testid="record-metadata-table" />
+              </div>
             }
             <div className={styles.documentPropertiesContainer}>
               <div className={styles.documentPropertiesLabel} data-testid="entity-record-properties-label">Document Properties</div>
@@ -339,8 +337,8 @@ const DetailPageNonEntity = (props) => {
               }
             </div>
           </div>
-        </Sider>
-      </Layout>
+        </HCSider>
+      </div>
     </div>
   );
 };

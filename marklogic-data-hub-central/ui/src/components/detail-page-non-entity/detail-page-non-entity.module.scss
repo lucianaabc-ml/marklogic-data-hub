@@ -18,10 +18,16 @@
     font-size: 18px;
 }
 
+.layout {
+    display: flex;
+    background-color: red;
+}
+
 .detailContentNonEntityInstance {
     background: #fff;
     padding: 18px 0px;
     max-height: 100vh;
+    flex: 1 auto;
 
     .detailContent {
         background: #fff;

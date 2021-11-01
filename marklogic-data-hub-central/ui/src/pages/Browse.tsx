@@ -24,6 +24,7 @@ import Spinner from "react-bootstrap/Spinner";
 import RecordCardView from "../components/record-view/record-view";
 import SidebarFooter from "../components/sidebar-footer/sidebar-footer";
 import HCTooltip from "../components/common/hc-tooltip/hc-tooltip";
+import HCSider from "../components/common/hc-side/hc-side";
 
 
 interface Props extends RouteComponentProps<any> {
@@ -410,20 +411,14 @@ const Browse: React.FC<Props> = ({location}) => {
   if (searchOptions.zeroState) {
     return (
       <>
-        <Query queries={queries || []} setQueries={setQueries} isSavedQueryUser={isSavedQueryUser} columns={columns} setIsLoading={setIsLoading} entities={entities} selectedFacets={[]} greyFacets={[]} entityDefArray={entityDefArray} isColumnSelectorTouched={isColumnSelectorTouched} setColumnSelectorTouched={setColumnSelectorTouched} database={zeroStatePageDatabase} setCardView={setCardView} cardView={cardView}/>
-        <ZeroStateExplorer entities={entities} isSavedQueryUser={isSavedQueryUser} queries={queries} columns={columns} setIsLoading={setIsLoading} tableView={tableView} toggleTableView={toggleTableView} setCardView={setCardView} setDatabasePreferences={setDatabasePreferences} zeroStatePageDatabase={zeroStatePageDatabase} setZeroStatePageDatabase={setZeroStatePageDatabase} toggleDataHubArtifacts={toggleDataHubArtifacts}/>
+        <Query queries={queries || []} setQueries={setQueries} isSavedQueryUser={isSavedQueryUser} columns={columns} setIsLoading={setIsLoading} entities={entities} selectedFacets={[]} greyFacets={[]} entityDefArray={entityDefArray} isColumnSelectorTouched={isColumnSelectorTouched} setColumnSelectorTouched={setColumnSelectorTouched} database={zeroStatePageDatabase} setCardView={setCardView} cardView={cardView} />
+        <ZeroStateExplorer entities={entities} isSavedQueryUser={isSavedQueryUser} queries={queries} columns={columns} setIsLoading={setIsLoading} tableView={tableView} toggleTableView={toggleTableView} setCardView={setCardView} setDatabasePreferences={setDatabasePreferences} zeroStatePageDatabase={zeroStatePageDatabase} setZeroStatePageDatabase={setZeroStatePageDatabase} toggleDataHubArtifacts={toggleDataHubArtifacts} />
       </>
     );
   } else {
     return (
-      <Layout className={styles.layout}>
-        <Sider className={styles.sideBarFacets}
-          trigger={null}
-          collapsedWidth={0}
-          collapsible
-          collapsed={collapse}
-          width={"20vw"}
-        >
+      <div className={styles.layout}>
+        <HCSider show={true} placement="left">
           <Sidebar
             facets={facets}
             selectedEntities={searchOptions.entityTypeIds}
@@ -437,14 +432,14 @@ const Browse: React.FC<Props> = ({location}) => {
             cardView={cardView}
           />
           <SidebarFooter />
-        </Sider>
+        </HCSider>
         <Content className={styles.content} id="browseContainer">
 
-          <div className={styles.collapseIcon} id="sidebar-collapse-icon">
+          {/* <div className={styles.collapseIcon} id="sidebar-collapse-icon">
             {collapse ?
               <FontAwesomeIcon aria-label="collapsed" icon={faAngleDoubleRight} onClick={onCollapse} size="lg" style={{fontSize: "16px", color: "#000"}} /> :
               <FontAwesomeIcon aria-label="expanded" icon={faAngleDoubleLeft} onClick={onCollapse} size="lg" style={{fontSize: "16px", color: "#000"}} />}
-          </div>
+          </div> */}
           {user.error.type === "ALERT" ?
             <AsyncLoader />
             :
@@ -454,7 +449,7 @@ const Browse: React.FC<Props> = ({location}) => {
                 {/* TODO Fix searchBar widths, it currently overlaps at narrow browser widths */}
                 <div className={styles.searchBar} ref={searchBarRef} >
 
-                  <SearchBar entities={entities} cardView={cardView} setHubArtifactsVisibilityPreferences={setHubArtifactsVisibilityPreferences}/>
+                  <SearchBar entities={entities} cardView={cardView} setHubArtifactsVisibilityPreferences={setHubArtifactsVisibilityPreferences} />
                   <SearchSummary
                     total={totalDocuments}
                     start={searchOptions.start}
@@ -565,7 +560,7 @@ const Browse: React.FC<Props> = ({location}) => {
           }
         </Content>
 
-      </Layout>
+      </div>
     );
   }
 };

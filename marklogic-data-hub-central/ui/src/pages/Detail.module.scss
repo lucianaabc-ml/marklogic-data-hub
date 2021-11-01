@@ -5,6 +5,11 @@
 }
 @import "../theme/HCTheme.scss";
 
+.layout {
+    display: flex;
+    background-color: tomato;
+}
+
 .header {
     display: flex;
     margin-bottom: 20px;
