@@ -1,18 +1,18 @@
-import React, {useState, useEffect, useContext} from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Axios from "axios";
-import {Select, Radio, Tooltip} from "antd";
-import {Form, Row, Col, FormLabel, FormControl} from "react-bootstrap";
+import { Select, Radio } from "antd";
+import { Form, Row, Col, FormLabel, FormControl } from "react-bootstrap";
 import styles from "./advanced-settings.module.scss";
-import {AdvancedSettingsTooltips} from "../../config/tooltips.config";
-import {AdvancedSettingsMessages} from "../../config/messages.config";
+import { AdvancedSettingsTooltips } from "../../config/tooltips.config";
+import { AdvancedSettingsMessages } from "../../config/messages.config";
 import StepsConfig from "../../config/steps.config";
 import "./advanced-settings.scss";
 import AdvancedTargetCollections from "./advanced-target-collections";
-import {CurationContext} from "../../util/curation-context";
-import {ChevronDown, ChevronRight, QuestionCircleFill} from "react-bootstrap-icons";
-import {HCInput, HCAlert, HCButton, HCTooltip} from "@components/common";
+import { CurationContext } from "../../util/curation-context";
+import { ChevronDown, ChevronRight, QuestionCircleFill } from "react-bootstrap-icons";
+import { HCInput, HCAlert, HCButton, HCTooltip } from "@components/common";
 
-const {Option} = Select;
+const { Option } = Select;
 
 type Props = {
   tabKey: string;
@@ -35,7 +35,7 @@ type Props = {
 }
 
 const AdvancedSettings: React.FC<Props> = (props) => {
-  const {curationOptions, validateCalled, setValidateMatchCalled, setValidateMergeCalled, validateMerge} = useContext(CurationContext);
+  const { curationOptions, validateCalled, setValidateMatchCalled, setValidateMergeCalled, validateMerge } = useContext(CurationContext);
   const tooltips = Object.assign({}, AdvancedSettingsTooltips, props.tooltipsData);
   const stepType = props.activityType;
   const invalidJSONMessage = StepsConfig.invalidJSONMessage;
@@ -77,12 +77,12 @@ const AdvancedSettings: React.FC<Props> = (props) => {
 
   const defaultprovGranularity = StepsConfig.defaultProvGran;
   const fineGrainProvAvailable = stepType === "matching" || stepType === "merging";
-  const provGranularityOptions = fineGrainProvAvailable ? {"Off": "off", "Coarse-grained": "coarse", "Fine-grained": "fine"} : {"Off": "off", "Coarse-grained": "coarse"};
+  const provGranularityOptions = fineGrainProvAvailable ? { "Off": "off", "Coarse-grained": "coarse", "Fine-grained": "fine" } : { "Off": "off", "Coarse-grained": "coarse" };
   const [provGranularity, setProvGranularity] = useState(defaultprovGranularity);
   const [provGranularityTouched, setProvGranularityTouched] = useState(false);
 
   const defaultValidateEntity = StepsConfig.defaultValidateEntity;
-  const validateEntityOptions = {"Do not validate": "doNotValidate", "Store validation errors in entity headers": "accept", "Skip documents with validation  errors": "reject"};
+  const validateEntityOptions = { "Do not validate": "doNotValidate", "Store validation errors in entity headers": "accept", "Skip documents with validation  errors": "reject" };
   const [validateEntity, setValidateEntity] = useState(defaultValidateEntity);
   const [validateEntityTouched, setValidateEntityTouched] = useState(false);
 
@@ -90,7 +90,7 @@ const AdvancedSettings: React.FC<Props> = (props) => {
   const [attachSourceDocumentTouched, setAttachSourceDocumentTouched] = useState(false);
 
   const defaultSourceRecordScope = StepsConfig.defaultSourceRecordScope;
-  const sourceRecordScopeOptions = {"Instance only": "instanceOnly", "Entire record": "entireRecord"};
+  const sourceRecordScopeOptions = { "Instance only": "instanceOnly", "Entire record": "entireRecord" };
   const [sourceRecordScope, setSourceRecordScope] = useState(defaultSourceRecordScope);
   const [sourceRecordScopeTouched, setSourceRecordScopeTouched] = useState(false);
   const [sourceRecordScopeToggled, setSourceRecordScopeToggled] = useState(false);
@@ -671,7 +671,7 @@ const AdvancedSettings: React.FC<Props> = (props) => {
               <Select
                 id="additionalColl"
                 mode="tags"
-                style={{width: "100%"}}
+                style={{ width: "100%" }}
                 placeholder="Please add target collections"
                 value={additionalCollections}
                 disabled={!canReadWrite}
@@ -909,7 +909,7 @@ const AdvancedSettings: React.FC<Props> = (props) => {
                     className={styles.textarea}
                     rows={6}
                     aria-label="headers-textarea"
-                    style={!headersValid ? {border: "solid 1px #C00"} : {}}
+                    style={!headersValid ? { border: "solid 1px #C00" } : {}}
                   />
                   <div className={"p-2 d-flex align-items-center"}>
                     <HCTooltip
@@ -955,7 +955,7 @@ const AdvancedSettings: React.FC<Props> = (props) => {
                     className={styles.textareaExpand}
                     rows={6}
                     aria-label="interceptors-textarea"
-                    style={!interceptorsValid ? {border: "solid 1px #C00"} : {}}
+                    style={!interceptorsValid ? { border: "solid 1px #C00" } : {}}
                   />
                   <div className={"p-2 d-flex align-items-center"}>
                     <HCTooltip
@@ -1008,7 +1008,7 @@ const AdvancedSettings: React.FC<Props> = (props) => {
                     className={styles.textareaExpand}
                     rows={6}
                     aria-label="customHook-textarea"
-                    style={!customHookValid ? {border: "solid 1px #C00"} : {}}
+                    style={!customHookValid ? { border: "solid 1px #C00" } : {}}
                   />
                   <div className={"p-2 d-flex align-items-center"}>
                     <HCTooltip
@@ -1066,11 +1066,11 @@ const AdvancedSettings: React.FC<Props> = (props) => {
         <Row className={"mt-4"}>
           <Col className={"d-flex justify-content-end"}>
             <HCButton aria-label="Cancel" variant="outline-light" size="sm" data-testid={`${props.stepData.name}-cancel-settings`} onClick={() => onCancel()}>Cancel</HCButton>&nbsp;&nbsp;
-            {!canReadWrite || !isFormValid() ? <Tooltip title={tooltips.missingPermission} placement={"bottomRight"}>
+            {!canReadWrite || !isFormValid() ? <HCTooltip id="missing-permission-tooltip" text={tooltips.missingPermission} placement={"bottom-end"}>
               <span className={styles.disabledCursor}>
                 <HCButton size="sm" id={"saveButton"} className={styles.saveButton} data-testid={`${props.stepData.name}-save-settings`} variant="primary" type="submit" onClick={handleSubmit} disabled={true}>Save</HCButton>
               </span>
-            </Tooltip> : <HCButton size="sm" id={"saveButton"} data-testid={`${props.stepData.name}-save-settings`} variant="primary" type="submit" onClick={handleSubmit} disabled={false} onFocus={sendPayload}>Save</HCButton>}
+            </HCTooltip> : <HCButton size="sm" id={"saveButton"} data-testid={`${props.stepData.name}-save-settings`} variant="primary" type="submit" onClick={handleSubmit} disabled={false} onFocus={sendPayload}>Save</HCButton>}
           </Col>
         </Row>
       </Form>

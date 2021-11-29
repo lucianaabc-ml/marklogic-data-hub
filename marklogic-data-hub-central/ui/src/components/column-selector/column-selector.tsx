@@ -1,11 +1,11 @@
-import React, {useState, useEffect, useContext} from "react";
-import {Popover, Tree, Tooltip} from "antd";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faColumns} from "@fortawesome/free-solid-svg-icons";
+import React, { useState, useEffect, useContext } from "react";
+import { Tree } from "antd";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faColumns } from "@fortawesome/free-solid-svg-icons";
 import styles from "./column-selector.module.scss";
-import {treeConverter, getCheckedKeys, getSelectedTableProperties, setTreeVisibility, getParentKey} from "../../util/data-conversion";
-import {SearchContext} from "../../util/search-context";
-import {HCSearch, HCButton, HCDivider, HCTooltip} from "@components/common";
+import { treeConverter, getCheckedKeys, getSelectedTableProperties, setTreeVisibility, getParentKey } from "../../util/data-conversion";
+import { SearchContext } from "../../util/search-context";
+import { HCSearch, HCButton, HCDivider, HCTooltip } from "@components/common";
 
 interface Props {
   entityPropertyDefinitions: any[];
@@ -18,7 +18,7 @@ interface Props {
 }
 
 const ColumnSelector: React.FC<Props> = (props) => {
-  const {TreeNode} = Tree;
+  const { TreeNode } = Tree;
   const {
     setSelectedTableProperties,
   } = useContext(SearchContext);
@@ -34,7 +34,7 @@ const ColumnSelector: React.FC<Props> = (props) => {
   const [checkedKeys, setCheckedKeys] = useState<any[]>(selectedPropertyKeys);
 
   let primaryKey = treeColumns.find((prop => { return prop.title === props.primaryKey; }));
-  const dataList : any[] = [];
+  const dataList: any[] = [];
 
   useEffect(() => {
     allProperties = treeConverter(props.entityPropertyDefinitions);
@@ -54,7 +54,7 @@ const ColumnSelector: React.FC<Props> = (props) => {
 
   const generateList = data => {
     for (let i = 0; i < data.length; i++) {
-      dataList.push({key: data[i].key, title: data[i].title});
+      dataList.push({ key: data[i].key, title: data[i].title });
       if (data[i].children) {
         generateList(data[i].children);
       }
@@ -70,7 +70,7 @@ const ColumnSelector: React.FC<Props> = (props) => {
         index > -1 ? (
           <span>
             {beforeStr}
-            <span style={{fontWeight: "bold"}}>{searchValue}</span>
+            <span style={{ fontWeight: "bold" }}>{searchValue}</span>
             {afterStr}
           </span>
         ) : (
@@ -80,7 +80,7 @@ const ColumnSelector: React.FC<Props> = (props) => {
       if (item.children) {
         if (item.visible === false) {
           return (
-            <TreeNode style={{display: "none"}} key={item.key} title={title} >
+            <TreeNode style={{ display: "none" }} key={item.key} title={title} >
               {treeRenderer(item.children)}
             </TreeNode>
           );
@@ -94,21 +94,21 @@ const ColumnSelector: React.FC<Props> = (props) => {
         }
       }
       if (item.visible === false) {
-        return <TreeNode style={{display: "none"}} title={title} key={item.key} />;
+        return <TreeNode style={{ display: "none" }} title={title} key={item.key} />;
       } else {
         if (item && primaryKey && item.key === primaryKey.key) {
           let pkTitle = <HCTooltip text="The column identified as the unique identifier must always be displayed." id="column-identifier-tooltip" placement="top">
             <div data-testid="pk-tooltip">{title}</div>
           </HCTooltip>;
-          return <TreeNode title={pkTitle} disabled={true} disableCheckbox={true} key={item.key} data-testid={`node-${item.title}`}/>;
+          return <TreeNode title={pkTitle} disabled={true} disableCheckbox={true} key={item.key} data-testid={`node-${item.title}`} />;
         } else {
-          return <TreeNode title={title} key={item.key} data-testid={`node-${item.title}`}/>;
+          return <TreeNode title={title} key={item.key} data-testid={`node-${item.title}`} />;
         }
       }
     });
 
   const onChange = e => {
-    const {value} = e.target;
+    const { value } = e.target;
     let filteredTree = setTreeVisibility(allProperties, value).ob;
     setTreeColumns(filteredTree);
     generateList(filteredTree);
@@ -140,7 +140,7 @@ const ColumnSelector: React.FC<Props> = (props) => {
   const content = (
     <div data-testid="column-selector-popover" className={styles.popover}>
       <header>
-        <HCSearch style={{marginBottom: 8}} placeholder="Search" onChange={onChange} />
+        <HCSearch style={{ marginBottom: 8 }} placeholder="Search" onChange={onChange} />
       </header>
       <div className={styles.content}>
         <Tree
@@ -170,11 +170,12 @@ const ColumnSelector: React.FC<Props> = (props) => {
 
   return (
     <div className={styles.fixedPopup}>
-      <Tooltip title="Select the columns to display." placement="topRight">
-        <Popover placement="leftTop" content={content} trigger="click" visible={props.popoverVisibility} className={styles.fixedPopup}>
-          <FontAwesomeIcon onClick={() => props.setPopoverVisibility(true)} className={styles.columnIcon} icon={faColumns} size="lg" data-testid="column-selector-tooltip"/>
-        </Popover>
-      </Tooltip>
+      <HCTooltip id="column-selector-tooltip" text="Select the columns to display." placement="top-end">
+        <i>
+          <FontAwesomeIcon onClick={() => props.setPopoverVisibility(true)} className={styles.columnIcon} icon={faColumns} size="lg" data-testid="column-selector-tooltip" />
+        </i>
+      </HCTooltip>
+
     </div>
   );
 };

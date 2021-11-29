@@ -1,21 +1,21 @@
-import React, {useState, useEffect, useContext} from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styles from "./mapping-card.module.scss";
-import {Select, Tooltip} from "antd";
-import {Row, Col, Modal} from "react-bootstrap";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faTrashAlt} from "@fortawesome/free-regular-svg-icons";
-import {convertDateFromISO, getInitialChars, extractCollectionFromSrcQuery} from "../../../util/conversionFunctions";
-import {AdvMapTooltips, SecurityTooltips} from "../../../config/tooltips.config";
-import {Link, useHistory} from "react-router-dom";
-import {StepType} from "../../../types/curation-types";
-import {faCog, faPencilAlt} from "@fortawesome/free-solid-svg-icons";
-import {CurationContext} from "../../../util/curation-context";
-import {getViewSettings, setViewSettings} from "../../../util/user-context";
+import { Select } from "antd";
+import { Row, Col, Modal } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
+import { convertDateFromISO, getInitialChars, extractCollectionFromSrcQuery } from "../../../util/conversionFunctions";
+import { AdvMapTooltips, SecurityTooltips } from "../../../config/tooltips.config";
+import { Link, useHistory } from "react-router-dom";
+import { StepType } from "../../../types/curation-types";
+import { faCog, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+import { CurationContext } from "../../../util/curation-context";
+import { getViewSettings, setViewSettings } from "../../../util/user-context";
 import Steps from "../../steps/steps";
-import {PlayCircleFill, PlusCircleFill} from "react-bootstrap-icons";
-import {HCCard, HCDivider, HCButton} from "@components/common";
+import { PlayCircleFill, PlusCircleFill } from "react-bootstrap-icons";
+import { HCCard, HCDivider, HCButton, HCTooltip } from "@components/common";
 
-const {Option} = Select;
+const { Option } = Select;
 
 interface Props {
   data: any;
@@ -35,7 +35,7 @@ interface Props {
 
 const MappingCard: React.FC<Props> = (props) => {
   const storage = getViewSettings();
-  const {setActiveStep} = useContext(CurationContext);
+  const { setActiveStep } = useContext(CurationContext);
   const [mapData, setMapData] = useState({});
   const [dialogVisible, setDialogVisible] = useState(false);
   const [addDialogVisible, setAddDialogVisible] = useState(false);
@@ -49,7 +49,7 @@ const MappingCard: React.FC<Props> = (props) => {
   const [selected, setSelected] = useState({}); // track Add Step selections so we can reset on cancel
   const [selectVisible, setSelectVisible] = useState(false);
   const [tooltipVisible, setTooltipVisible] = useState(false);
-  const tooltipOverlayStyle = {maxWidth: "200"};
+  const tooltipOverlayStyle = { maxWidth: "200" };
 
   const [openStepSettings, setOpenStepSettings] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -70,20 +70,20 @@ const MappingCard: React.FC<Props> = (props) => {
   };
 
   const OpenStepSettings = async (index) => {
-    setMapData(prevState => ({...prevState, ...props.data[index]}));
+    setMapData(prevState => ({ ...prevState, ...props.data[index] }));
     setIsEditing(true);
     setOpenStepSettings(true);
   };
 
   const createMappingArtifact = async (payload) => {
     // Update local form state, then save to db
-    setMapData(prevState => ({...prevState, ...payload}));
+    setMapData(prevState => ({ ...prevState, ...payload }));
     await props.createMappingArtifact(payload);
   };
 
   const updateMappingArtifact = async (payload) => {
     // Update local form state
-    setMapData(prevState => ({...prevState, ...payload}));
+    setMapData(prevState => ({ ...prevState, ...payload }));
     await props.updateMappingArtifact(payload);
   };
 
@@ -133,7 +133,7 @@ const MappingCard: React.FC<Props> = (props) => {
       <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
     </Modal.Header>
     <Modal.Body className={"pt-0 pb-4"}>
-      <span style={{fontSize: "16px"}}>Are you sure you want to delete the <strong>{mappingArtifactName}</strong> step?</span>
+      <span style={{ fontSize: "16px" }}>Are you sure you want to delete the <strong>{mappingArtifactName}</strong> step?</span>
       <div className={"d-flex justify-content-center pt-4 pb-2"}>
         <HCButton className={"me-2"} variant="outline-light" aria-label={"No"} onClick={onCancel}>
           {"No"}
@@ -175,11 +175,11 @@ const MappingCard: React.FC<Props> = (props) => {
         entityType
       }
     });
-    history.push({pathname: "/tiles/curate/map"});
+    history.push({ pathname: "/tiles/curate/map" });
   };
 
   function handleSelect(obj) {
-    let selectedNew = {...selected};
+    let selectedNew = { ...selected };
     selectedNew[obj.loadName] = obj.flowName;
     setSelected(selectedNew);
     handleStepAdd(obj.mappingName, obj.flowName);
@@ -272,7 +272,7 @@ const MappingCard: React.FC<Props> = (props) => {
         <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
       </Modal.Header>
       <Modal.Body className={"pt-0 pb-4"}>
-        <div aria-label="add-step-confirmation" style={{fontSize: "16px"}}>
+        <div aria-label="add-step-confirmation" style={{ fontSize: "16px" }}>
           {isStepInFlow(mappingArtifactName, flowName) ?
             <p aria-label="step-in-flow">The step <strong>{mappingArtifactName}</strong> is already in the flow <strong>{flowName}</strong>. Would you like to add another instance?</p> :
             <p aria-label="step-not-in-flow">Are you sure you want to add the step <strong>{mappingArtifactName}</strong> to the flow <strong>{flowName}</strong>?</p>
@@ -296,7 +296,7 @@ const MappingCard: React.FC<Props> = (props) => {
       size={"lg"}
     >
       <Modal.Header className={"bb-none"}>
-        <div aria-label="step-in-no-flows-confirmation" style={{fontSize: "16px"}}>Choose the flow in which to add and run the step <strong>{mappingArtifactName}</strong>.</div>
+        <div aria-label="step-in-no-flows-confirmation" style={{ fontSize: "16px" }}>Choose the flow in which to add and run the step <strong>{mappingArtifactName}</strong>.</div>
         <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
       </Modal.Header>
       <Modal.Body className={"pb-2"}>
@@ -319,7 +319,7 @@ const MappingCard: React.FC<Props> = (props) => {
                   targetEntityType: props.entityModel.entityTypeId,
                   existingFlow: false
                 }
-              }}><div className={styles.stepLink} data-testid={`${mappingArtifactName}-run-toNewFlow`}><PlusCircleFill className={styles.plusIconNewFlow}/>New flow</div></Link>
+              }}><div className={styles.stepLink} data-testid={`${mappingArtifactName}-run-toNewFlow`}><PlusCircleFill className={styles.plusIconNewFlow} />New flow</div></Link>
           </Col>
         </Row>
       </Modal.Body>
@@ -339,7 +339,7 @@ const MappingCard: React.FC<Props> = (props) => {
         <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
       </Modal.Header>
       <Modal.Body className={"pt-0"}>
-        <div aria-label="run-step-one-flow-confirmation" style={{fontSize: "16px"}}>
+        <div aria-label="run-step-one-flow-confirmation" style={{ fontSize: "16px" }}>
           <div>
             <div aria-label="step-in-one-flow">Running the step <strong>{mappingArtifactName}</strong> in the flow <strong>{flowsWithStep}</strong></div>
           </div>
@@ -364,7 +364,7 @@ const MappingCard: React.FC<Props> = (props) => {
         <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
       </Modal.Header>
       <Modal.Body className={"pt-0"}>
-        <div aria-label="run-step-mult-flows-confirmation" style={{fontSize: "16px"}}>
+        <div aria-label="run-step-mult-flows-confirmation" style={{ fontSize: "16px" }}>
           <div aria-label="step-in-mult-flows">Choose the flow in which to run the step <strong>{mappingArtifactName}</strong>.</div>
           <div className={styles.flowSelectGrid}>{flowsWithStep.map((flowName, i) => (
             <Link data-testid="link" id="tiles-run-step" key={i} to={
@@ -394,20 +394,20 @@ const MappingCard: React.FC<Props> = (props) => {
   return (
     <div className={styles.loadContainer}>
       <Row>
-        {props.canReadWrite ?<Col xs={"auto"}>
+        {props.canReadWrite ? <Col xs={"auto"}>
           <HCCard
             className={styles.addNewCard}>
-            <div><PlusCircleFill aria-label="icon: plus-circle" className={styles.plusIcon} onClick={OpenAddNew}/></div>
+            <div><PlusCircleFill aria-label="icon: plus-circle" className={styles.plusIcon} onClick={OpenAddNew} /></div>
             <br />
             <p className={styles.addNewContent}>Add New</p>
           </HCCard>
         </Col> : <Col xs={"auto"}>
-          <Tooltip title={"Curate: "+SecurityTooltips.missingPermission} overlayStyle={tooltipOverlayStyle}><HCCard
+          <HCTooltip text={"Curate: " + SecurityTooltips.missingPermission} overlayStyle={tooltipOverlayStyle}><HCCard
             className={styles.addNewCardDisabled}>
-            <div aria-label="add-new-card-disabled"><PlusCircleFill className={styles.plusIconDisabled}/></div>
+            <div aria-label="add-new-card-disabled"><PlusCircleFill className={styles.plusIconDisabled} /></div>
             <br />
             <p className={styles.addNewContent}>Add New</p>
-          </HCCard></Tooltip>
+          </HCCard></HCTooltip>
         </Col>}
         {
           props.data && props.data.length > 0 ?
@@ -420,10 +420,10 @@ const MappingCard: React.FC<Props> = (props) => {
                 >
                   <HCCard
                     actions={[
-                      <Tooltip title={"Step Details"} placement="bottom"><i className={styles.stepDetails}><FontAwesomeIcon icon={faPencilAlt} onClick={() => openMapStepDetails(elem.name, index)} data-testid={`${elem.name}-stepDetails`} /></i></Tooltip>,
-                      <Tooltip title={"Step Settings"} placement="bottom"><i className={styles.editIcon} role="edit-mapping button" key="last"><FontAwesomeIcon icon={faCog} data-testid={elem.name + "-edit"} onClick={() => OpenStepSettings(index)} /></i></Tooltip>,
-                      props.canReadWrite ? <Tooltip title={"Run"} placement="bottom"><i aria-label="icon:run"><PlayCircleFill className={styles.runIcon} data-testid={elem.name + "-run"} onClick={() => handleStepRun(elem.name)} /></i></Tooltip> : <Tooltip title={"Run: " + SecurityTooltips.missingPermission} placement="bottom" overlayStyle={{maxWidth: "200px"}}><i aria-label="icon: run"><PlayCircleFill className={styles.disabledRunIcon} role="disabled-run-mapping button" data-testid={elem.name + "-disabled-run"} onClick={(event) => event.preventDefault()}/></i></Tooltip>,
-                      props.canReadWrite ? <Tooltip title={"Delete"} placement="bottom"><i key="last" role="delete-mapping button" data-testid={elem.name + "-delete"} onClick={() => handleCardDelete(elem.name)}><FontAwesomeIcon icon={faTrashAlt} className={styles.deleteIcon} size="lg" /></i></Tooltip> : <Tooltip title={"Delete: " + SecurityTooltips.missingPermission} placement="bottom" overlayStyle={{maxWidth: "200px"}}><i role="disabled-delete-mapping button" data-testid={elem.name + "-disabled-delete"} onClick={(event) => event.preventDefault()}><FontAwesomeIcon icon={faTrashAlt} className={styles.disabledIcon} size="lg" /></i></Tooltip>,
+                      <HCTooltip id="step-details-tooltip" text={"Step Details"} placement="bottom"><i className={styles.stepDetails}><FontAwesomeIcon icon={faPencilAlt} onClick={() => openMapStepDetails(elem.name, index)} data-testid={`${elem.name}-stepDetails`} /></i></HCTooltip>,
+                      <HCTooltip id="step-settings-tooltip" text={"Step Settings"} placement="bottom"><i className={styles.editIcon} role="edit-mapping button" key="last"><FontAwesomeIcon icon={faCog} data-testid={elem.name + "-edit"} onClick={() => OpenStepSettings(index)} /></i></HCTooltip>,
+                      props.canReadWrite ? <HCTooltip id="run-tooltip" text={"Run"} placement="bottom"><i aria-label="icon:run"><PlayCircleFill className={styles.runIcon} data-testid={elem.name + "-run"} onClick={() => handleStepRun(elem.name)} /></i></HCTooltip> : <HCTooltip title={"Run: " + SecurityTooltips.missingPermission} placement="bottom" overlayStyle={{ maxWidth: "200px" }}><i aria-label="icon: run"><PlayCircleFill className={styles.disabledRunIcon} role="disabled-run-mapping button" data-testid={elem.name + "-disabled-run"} onClick={(event) => event.preventDefault()} /></i></HCTooltip>,
+                      props.canReadWrite ? <HCTooltip id="delete-tooltip" text={"Delete"} placement="bottom"><i key="last" role="delete-mapping button" data-testid={elem.name + "-delete"} onClick={() => handleCardDelete(elem.name)}><FontAwesomeIcon icon={faTrashAlt} className={styles.deleteIcon} size="lg" /></i></HCTooltip> : <HCTooltip id="missing-permission-tooltip" text={"Delete: " + SecurityTooltips.missingPermission} placement="bottom" overlayStyle={{ maxWidth: "200px" }}><i role="disabled-delete-mapping button" data-testid={elem.name + "-disabled-delete"} onClick={(event) => event.preventDefault()}><FontAwesomeIcon icon={faTrashAlt} className={styles.disabledIcon} size="lg" /></i></HCTooltip>,
                     ]}
                     className={styles.cardStyle}
                   >
@@ -434,7 +434,7 @@ const MappingCard: React.FC<Props> = (props) => {
                     {elem.selectedSource === "collection" ? <div className={styles.sourceQuery}>Collection: {extractCollectionFromSrcQuery(elem.sourceQuery)}</div> : <div className={styles.sourceQuery}>Source Query: {getInitialChars(elem.sourceQuery, 32, "...")}</div>}
                     <br /><br />
                     <p className={styles.lastUpdatedStyle}>Last Updated: {convertDateFromISO(elem.lastUpdated)}</p>
-                    <div className={styles.cardLinks} style={{display: showLinks === elem.name ? "block" : "none"}}>
+                    <div className={styles.cardLinks} style={{ display: showLinks === elem.name ? "block" : "none" }}>
                       {
                         props.canWriteFlow ?
                           <Link id="tiles-run-add" to={
@@ -460,11 +460,11 @@ const MappingCard: React.FC<Props> = (props) => {
                         Add step to an existing flow
                         {
                           selectVisible ?
-                            <Tooltip title={"Curate: " + SecurityTooltips.missingPermission} placement={"bottom"} visible={tooltipVisible && !props.canWriteFlow}><div className={styles.cardLinkSelect}>
+                            <HCTooltip id="curate-tooltip" text={"Curate: " + SecurityTooltips.missingPermission} placement={"bottom"} show={tooltipVisible && !props.canWriteFlow}><div className={styles.cardLinkSelect}>
                               <Select
-                                style={{width: "100%"}}
+                                style={{ width: "100%" }}
                                 value={selected[elem.name] ? selected[elem.name] : undefined}
-                                onChange={(flowName) => handleSelect({flowName: flowName, mappingName: elem.name})}
+                                onChange={(flowName) => handleSelect({ flowName: flowName, mappingName: elem.name })}
                                 placeholder="Select Flow"
                                 defaultActiveFirstOption={false}
                                 disabled={!props.canWriteFlow}
@@ -480,7 +480,7 @@ const MappingCard: React.FC<Props> = (props) => {
                                     null
                                 }
                               </Select>
-                            </div></Tooltip>
+                            </div></HCTooltip>
                             :
                             null
                         }
