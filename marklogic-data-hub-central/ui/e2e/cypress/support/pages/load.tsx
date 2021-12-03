@@ -172,8 +172,7 @@ class LoadPage {
      * @param db - accepts `STAGING` or `FINAL`
      */
   selectTargetDB(db: string) {
-    cy.waitUntil(() => cy.findByLabelText("targetDatabase-select")).click();
-    cy.waitUntil(() => cy.findByTestId(`targetDbOptions-data-hub-${db}`)).click({force: true});
+    cy.get("#targetDatabase-select-wrapper").click().contains(`data-hub-${db}`).click({force: true});
   }
 
   /**

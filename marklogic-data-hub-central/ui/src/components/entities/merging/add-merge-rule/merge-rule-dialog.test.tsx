@@ -45,7 +45,7 @@ describe("Merge Rule Dialog component", () => {
     expect(queryByLabelText("namespace-input")).not.toBeInTheDocument();
 
     //Selecting the merge type to Custom
-    fireEvent.click(getByLabelText("mergeType-select"));
+    fireEvent.keyDown(screen.getByLabelText("mergeType-select"), {key: "ArrowDown"});
     fireEvent.click(getByTestId("mergeTypeOptions-Custom"));
 
     //Initializing the required elements to be re-used later.
@@ -105,7 +105,7 @@ describe("Merge Rule Dialog component", () => {
     let cancelButton= getByText("Cancel");
 
     //Selecting the merge type to Property-Specific
-    fireEvent.click(getByLabelText("mergeType-select"));
+    fireEvent.keyDown(screen.getByLabelText("mergeType-select"), {key: "ArrowDown"});
     fireEvent.click(getByTestId("mergeTypeOptions-Property-specific"));
 
     //Checking if max values, max sources, priority slider and add button are available now, since merge type is property-specific.
@@ -157,7 +157,7 @@ describe("Merge Rule Dialog component", () => {
     expect(queryByText("Select strategy name")).not.toBeInTheDocument();
 
     //Selecting the merge type to strategy
-    fireEvent.click(getByLabelText("mergeType-select"));
+    fireEvent.keyDown(screen.getByLabelText("mergeType-select"), {key: "ArrowDown"});
     fireEvent.click(getByTestId("mergeTypeOptions-Strategy"));
 
     expect(queryByText("Select strategy name")).toBeInTheDocument();
@@ -177,7 +177,7 @@ describe("Merge Rule Dialog component", () => {
     expect(getByText("Strategy Name is required")).toBeInTheDocument();
 
     //Enter the values for strategy name to see save button gets enabled.
-    fireEvent.click(strategyName);
+    fireEvent.keyDown(strategyName, {key: "ArrowDown"});
     fireEvent.click(getByTestId("strategyNameOptions-customMergeStrategy"));
 
     fireEvent.click(saveButton);
@@ -205,7 +205,7 @@ describe("Merge Rule Dialog component", () => {
     expect((await(waitForElement(() => getByText(MergeRuleTooltips.disabledProperties))))).toBeInTheDocument();
 
     //Selecting the merge type to Property-Specific
-    fireEvent.click(getByLabelText("mergeType-select"));
+    fireEvent.keyDown(getByLabelText("mergeType-select"), {key: "ArrowDown"});
     fireEvent.click(getByTestId("mergeTypeOptions-Property-specific"));
 
     let saveButton = getByText("Save");
@@ -289,7 +289,7 @@ describe("Merge Rule Dialog component", () => {
     expect(queryByText("Select strategy name")).not.toBeInTheDocument();
 
     //Selecting the merge type to strategy
-    fireEvent.click(getByLabelText("mergeType-select"));
+    fireEvent.keyDown(getByLabelText("mergeType-select"), {key: "ArrowDown"});
     fireEvent.click(getByTestId("mergeTypeOptions-Strategy"));
 
     expect(queryByText("Select strategy name")).toBeInTheDocument();
@@ -302,7 +302,7 @@ describe("Merge Rule Dialog component", () => {
     let cancelButton = getByText("Cancel");
 
     //Enter the values for strategy name to see save button gets enabled.
-    fireEvent.click(strategyName);
+    fireEvent.keyDown(strategyName, {key: "ArrowDown"});
     fireEvent.click(getByTestId("strategyNameOptions-customMergeStrategy"));
 
     fireEvent.click(saveButton);

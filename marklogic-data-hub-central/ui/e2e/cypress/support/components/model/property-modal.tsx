@@ -61,7 +61,7 @@ class PropertyModal {
     return  cy.findByPlaceholderText("Select foreign key");
   }
   openForeignKeyDropdown() {
-    cy.findByLabelText("foreignKey-select").trigger("mouseover").click();
+    cy.get("#foreignKey-select-wrapper").trigger("mouseover").click();
   }
   getForeignKey(propertyName: string) {
     return cy.waitUntil(() => cy.findByLabelText(`${propertyName}-option`));

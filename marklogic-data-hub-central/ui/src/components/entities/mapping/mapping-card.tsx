@@ -1,7 +1,9 @@
 import React, {useState, useEffect, useContext} from "react";
 import styles from "./mapping-card.module.scss";
-import {Select, Tooltip} from "antd";
+import {Tooltip} from "antd";
 import {Row, Col, Modal} from "react-bootstrap";
+import Select from "react-select";
+import reactSelectThemeConfig from "../../../config/react-select-theme.config";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTrashAlt} from "@fortawesome/free-regular-svg-icons";
 import {convertDateFromISO, getInitialChars, extractCollectionFromSrcQuery} from "../../../util/conversionFunctions";
@@ -13,9 +15,7 @@ import {CurationContext} from "../../../util/curation-context";
 import {getViewSettings, setViewSettings} from "../../../util/user-context";
 import Steps from "../../steps/steps";
 import {PlayCircleFill, PlusCircleFill} from "react-bootstrap-icons";
-import {HCCard, HCDivider, HCButton} from "@components/common";
-
-const {Option} = Select;
+import {HCCard, HCDivider, HCButton, HCTooltip} from "@components/common";
 
 interface Props {
   data: any;
@@ -391,6 +391,8 @@ const MappingCard: React.FC<Props> = (props) => {
     </Modal>
   );
 
+  const flowOptions = props.flows?.length > 0 ? props.flows.map((f, i) => ({value: f.name, label: f.name})) : {};
+
   return (
     <div className={styles.loadContainer}>
       <Row>
@@ -460,27 +462,27 @@ const MappingCard: React.FC<Props> = (props) => {
                         Add step to an existing flow
                         {
                           selectVisible ?
-                            <Tooltip title={"Curate: " + SecurityTooltips.missingPermission} placement={"bottom"} visible={tooltipVisible && !props.canWriteFlow}><div className={styles.cardLinkSelect}>
+                            <HCTooltip text={"Curate: " + SecurityTooltips.missingPermission} id="add-mapping-step-to-flow-tooltip" placement={"top"} show={tooltipVisible && !props.canWriteFlow}><div className={styles.cardLinkSelect}>
                               <Select
-                                style={{width: "100%"}}
-                                value={selected[elem.name] ? selected[elem.name] : undefined}
-                                onChange={(flowName) => handleSelect({flowName: flowName, mappingName: elem.name})}
+                                id={`${elem.name}-flowsList-select-wrapper`}
+                                inputId={`${elem.name}-flowsList`}
                                 placeholder="Select Flow"
-                                defaultActiveFirstOption={false}
-                                disabled={!props.canWriteFlow}
-                                data-testid={`${elem.name}-flowsList`}
-                                getPopupContainer={() => document.getElementById("entityTilesContainer") || document.body}
-                              >
-                                {
-                                  props.flows && props.flows.length > 0 ?
-                                    props.flows.map((f, i) => (
-                                      <Option aria-label={`${f.name}-option`} value={f.name} key={i}>{f.name}</Option>
-                                    ))
-                                    :
-                                    null
-                                }
-                              </Select>
-                            </div></Tooltip>
+                                value={Object.keys(flowOptions).length > 0 ? flowOptions.find(oItem => oItem.value === selected[elem.name]) : undefined}
+                                onChange={(option) => handleSelect({flowName: option.value, mappingName: elem.name})}
+                                isSearchable={false}
+                                isDisabled={!props.canWriteFlow}
+                                aria-label={`${elem.name}-flowsList`}
+                                options={flowOptions}
+                                styles={reactSelectThemeConfig}
+                                formatOptionLabel={({value, label}) => {
+                                  return (
+                                    <span aria-label={`${value}-option`}>
+                                      {label}
+                                    </span>
+                                  );
+                                }}
+                              />
+                            </div></HCTooltip>
                             :
                             null
                         }
