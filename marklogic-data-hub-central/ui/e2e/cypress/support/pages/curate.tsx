@@ -40,7 +40,7 @@ class CuratePage {
 
   openExistingFlowDropdown(entityTypeId: string, stepName: string) {
     this.getEntityMappingStep(entityTypeId, stepName).should("be.visible", {timeout: 5000}).trigger("mouseover");
-    cy.findByTestId(`${stepName}-flowsList`).should("be.visible", {timeout: 5000}).click();
+    cy.get(`#${stepName}-flowsList-select-wrapper`).should("be.visible", {timeout: 5000}).click();
   }
 
   openStepDetails(stepName: string) {

@@ -38,11 +38,11 @@ describe("Validate Advance Settings for hub-central-match-merge-reader role", ()
   it("Validate the default Advanced settings are disabled", () => {
     loadPage.editStepInCardView(matchStep).click({force: true});
     loadPage.switchEditAdvanced().click();
-    cy.get("#sourceDatabase").invoke("attr", "class").should("contain", "ant-select-disabled");
-    cy.get("#targetDatabase").invoke("attr", "class").should("contain", "ant-select-disabled");
-    cy.get("div[id=\"additionalColl\"]").invoke("attr", "class").should("contain", "ant-select-disabled");
+    cy.get("#sourceDatabase").should("be.disabled");
+    cy.get("#targetDatabase").should("be.disabled");
+    cy.get("#additionalColl").should("be.disabled");
     cy.get("#targetPermissions").should("be.disabled");
-    cy.get("#provGranularity").invoke("attr", "class").should("contain", "ant-select-disabled");
+    cy.get("#provGranularity").should("be.disabled");
     cy.get("#batchSize").should("be.disabled");
     advancedSettingsDialog.toggleInterceptors();
     cy.get("#interceptors").should("be.disabled");
@@ -50,15 +50,11 @@ describe("Validate Advance Settings for hub-central-match-merge-reader role", ()
     cy.get("#customHook").should("be.disabled");
   });
   it("Validate the Advanced settings options are not displayed", () => {
-    cy.get("#sourceDatabase").click();
-    cy.findByTestId("sourceDbOptions-data-hub-STAGING").should("not.exist");
-    cy.findByTestId("sourceDbOptions-data-hub-FINAL").should("not.exist");
-    cy.get("#targetDatabase").click();
-    cy.findByTestId("targetDbOptions-data-hub-STAGING").should("not.exist");
-    cy.findByTestId("targetDbOptions-data-hub-FINAL").should("not.exist");
-    cy.get("#provGranularity").click();
-    cy.findByTestId("provOptions-Coarse-grained").should("not.exist");
-    cy.findByTestId("provOptions-Fine-grained").should("not.exist");
-    cy.findByTestId("provOptions-Off").should("not.exist");
+    cy.get("#sourceDatabase-select-wrapper").click({force: true});
+    cy.get(`[class$="MenuList"]`).should("not.exist");
+    cy.get("#targetDatabase-select-wrapper").click({force: true});
+    cy.get(`[class$="MenuList"]`).should("not.exist");
+    cy.get("#provGranularity-select-wrapper").click({force: true});
+    cy.get(`[class$="MenuList"]`).should("not.exist");
   });
 });

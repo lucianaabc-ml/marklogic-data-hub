@@ -327,3 +327,6 @@ div[role="dialog"][aria-modal="true"]:nth-last-child(5) {
         }
     }
 }
+.active {
+    color: $text-color;
+}

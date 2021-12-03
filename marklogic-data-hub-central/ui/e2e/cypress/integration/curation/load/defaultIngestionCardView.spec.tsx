@@ -71,25 +71,25 @@ describe("Validate CRUD functionality from card view and run in a flow", () => {
     loadPage.editStepInCardView(stepName).click();
     loadPage.switchEditAdvanced().click(); // Advanced tab
     loadPage.selectTargetDB("STAGING");
-    loadPage.targetCollectionInput().type("e2eTestCollection{enter}test1{enter}test2{enter}");
+    loadPage.targetCollectionInput().type("e2eTestCollection{enter}test1{enter}test2{enter}", {force: true});
     cy.findByText("Default Collections:").click();
     loadPage.defaultCollections(stepName).should("be.visible");
     loadPage.setTargetPermissions("data-hub-common,read,data-hub-common,update");
     loadPage.selectProvGranularity("Off");
     loadPage.setBatchSize("200");
     //Header JSON error
-    cy.get("#headers").clear().type("{").tab({force: true});
+    cy.get("#headers").clear().type("{").blur();
     loadPage.jsonValidateError().should("be.visible");
     loadPage.setHeaderContent("loadTile/headerContent");
     //Interceptors JSON error
     cy.findByText("Interceptors").click();
-    cy.get("#interceptors").clear().type("[\"test\": \"fail\"]").tab();
+    cy.get("#interceptors").clear().type("[\"test\": \"fail\"]").blur();
     loadPage.jsonValidateError().should("be.visible");
     cy.findByText("Interceptors").click(); //closing the interceptor text area
     loadPage.setStepInterceptor("");
     //Custom Hook JSON error
     cy.findByText("Custom Hook").click();
-    cy.get("#customHook").clear().type("{test}", {parseSpecialCharSequences: false}).tab();
+    cy.get("#customHook").clear().type("{test}", {parseSpecialCharSequences: false}).blur();
     loadPage.jsonValidateError().should("be.visible");
     cy.findByText("Custom Hook").click(); //closing the custom hook text area
     loadPage.setCustomHook("");
