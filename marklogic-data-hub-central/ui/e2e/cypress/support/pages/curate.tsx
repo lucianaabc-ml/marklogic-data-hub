@@ -52,7 +52,7 @@ class CuratePage {
      * @param flowName
      */
   getExistingFlowFromDropdown(flowName: string) {
-    return cy.findByLabelText(`${flowName}-option`);
+    return cy.findByText(`${flowName}`);
   }
 
   /**

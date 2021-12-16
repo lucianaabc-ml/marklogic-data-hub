@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useContext} from "react";
 import Axios from "axios";
-import Select from "react-select";
+import Select, {components as SelectComponents} from "react-select"
 import CreatableSelect from "react-select/creatable";
 import reactSelectThemeConfig from "../../config/react-select-theme.config";
 import {Form, Row, Col, FormCheck, FormLabel, FormControl} from "react-bootstrap";
@@ -565,6 +565,16 @@ const AdvancedSettings: React.FC<Props> = (props) => {
     }
   };
 
+  const MenuList  = (props) => (
+
+    <div id="sourceDatabase-select-MenuList">
+
+      <SelectComponents.MenuList {...props} />
+
+    </div>
+
+  );
+
   const sourceDbOptions = databaseOptions.map(d => ({value: d, label: d}));
   const targetDbOptions = databaseOptions.map(d => ({value: d, label: d}));
   const additionalCollectionsOptions = additionalCollections.map(d => ({value: d, label: d}));
@@ -624,6 +634,14 @@ const AdvancedSettings: React.FC<Props> = (props) => {
                 onBlur={sendPayload}
                 options={sourceDbOptions}
                 styles={reactSelectThemeConfig}
+                components={{MenuList}}
+                formatOptionLabel={({value, label}) => {
+                  return (
+                    <span data-cy={`sourceDbOptions-${value}`}>
+                      {label}
+                    </span>
+                  );
+                }}
               />
               <div className={"p-2 d-flex"}>
                 <HCTooltip

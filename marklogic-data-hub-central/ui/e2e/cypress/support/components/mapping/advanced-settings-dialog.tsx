@@ -10,8 +10,8 @@ class AdvancedSettingsDialog {
    * @example data-hub-STAGING, data-hub-FINAL
    */
   setSourceDatabase(dbName: string) {
-    cy.findByLabelText(`sourceDatabase-select`).click();
-    cy.findByTestId(`sourceDbOptions-${dbName}`).click();
+    cy.get(`#sourceDatabase-select-wrapper`).click();
+    cy.get(`#sourceDatabase-select-MenuList [data-cy="sourceDbOptions-${dbName}"]`).scrollIntoView()
   }
 
   /**
