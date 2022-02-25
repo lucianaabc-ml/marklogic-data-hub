@@ -12,7 +12,7 @@ import {updateUserPreferences, getUserPreferences} from "../../../services/user-
 import {UserContext} from "../../../util/user-context";
 import {expandGroupNode} from "../../../api/queries";
 import {Link} from "react-router-dom";
-
+import WarningModal from "@components/explore/warning-modal";
 
 type Props = {
   entityTypeInstances: any;
@@ -27,6 +27,8 @@ type Props = {
 
 const GraphVisExplore: React.FC<Props> = (props) => {
   const [expandedNodeData, setExpandedNodeData] = useState({});
+  const [isWarningModalVisible, setIsWarningModalVisible] = useState<boolean>(true);
+
   let graphData = {nodes: [], edges: []};
 
   const coordinatesExist = () => {
@@ -38,6 +40,7 @@ const GraphVisExplore: React.FC<Props> = (props) => {
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [clickedNode, setClickedNode] = useState({});
   const [hasStabilized, setHasStabilized] = useState(false);
+  const [entityName, setEntityName] = useState<string>("");
 
   const {
     searchOptions,
@@ -275,6 +278,7 @@ const GraphVisExplore: React.FC<Props> = (props) => {
     entityInstNodes = !nodesToExpand ? entityInstNodes : nodesToExpand;
     nodes = entityInstNodes?.map((e) => {
       let entityType = e.group.split("/").pop();
+      setEntityName(entityType)
       let entity = props.hubCentralConfig?.modeling?.entities[entityType];
       let nodeId = e.id;
       if (e.count > 1) {
@@ -889,6 +893,11 @@ const GraphVisExplore: React.FC<Props> = (props) => {
     }
   };
 
+  const toggleModal = (visible: boolean) => {
+    console.log("toggle modal")
+    setIsWarningModalVisible(visible)
+  }
+
   const handleDoubleClick = (event) => {
     doubleClick = true;
     const {nodes} = event;
@@ -1045,6 +1054,7 @@ const GraphVisExplore: React.FC<Props> = (props) => {
         />
         {contextMenuVisible && menu()}
       </div>
+      {isWarningModalVisible  && (<WarningModal handleTableView={handleTableViewRecords} toggleModal={toggleModal} entityName={entityName} isVisible={isWarningModalVisible}></WarningModal>)}
     </div>
   );
 };
