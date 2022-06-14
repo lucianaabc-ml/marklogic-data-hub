@@ -27,7 +27,9 @@ class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return <NoMatchRedirect message={this.state.errorMessage}/>;
+      return <div>
+          <NoMatchRedirect message={this.state.errorMessage}/>;
+        </div>
     }
 
     return this.props.children;
