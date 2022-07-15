@@ -2,27 +2,27 @@ import "./flows.scss";
 
 import * as _ from "lodash";
 
-import {Accordion, ButtonGroup, Card, Dropdown, Modal} from "react-bootstrap";
-import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, X, XCircleFill} from "react-bootstrap-icons";
-import {HCButton, HCCard, HCCheckbox, HCTooltip} from "@components/common";
-import {Link, useLocation} from "react-router-dom";
-import {PopoverRunSteps, RunToolTips, SecurityTooltips} from "@config/tooltips.config";
-import React, {CSSProperties, createRef, useContext, useEffect, useState} from "react";
-import {getViewSettings, setViewSettings} from "@util/user-context";
-import {faArrowAltCircleLeft, faArrowAltCircleRight, faTrashAlt} from "@fortawesome/free-regular-svg-icons";
-import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
-import {getUserPreferences, updateUserPreferences} from "../../../src/services//user-preferences";
+import { Accordion, ButtonGroup, Card, Dropdown, Modal } from "react-bootstrap";
+import { ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, X, XCircleFill } from "react-bootstrap-icons";
+import { HCButton, HCCard, HCCheckbox, HCTooltip } from "@components/common";
+import { Link, useLocation } from "react-router-dom";
+import { PopoverRunSteps, RunToolTips, SecurityTooltips } from "@config/tooltips.config";
+import React, { CSSProperties, createRef, useContext, useEffect, useState } from "react";
+import { getViewSettings, setViewSettings } from "@util/user-context";
+import { faArrowAltCircleLeft, faArrowAltCircleRight, faTrashAlt } from "@fortawesome/free-regular-svg-icons";
+import { faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle } from "@fortawesome/free-solid-svg-icons";
+import { getUserPreferences, updateUserPreferences } from "../../../src/services//user-preferences";
 
-import {AuthoritiesContext} from "@util/authorities";
-import {Flow} from "../../types/run-types";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import { AuthoritiesContext } from "@util/authorities";
+import { Flow } from "../../types/run-types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import NewFlowDialog from "./new-flow-dialog/new-flow-dialog";
 import axios from "axios";
-import {dynamicSortDates} from "@util/conversionFunctions";
+import { dynamicSortDates } from "@util/conversionFunctions";
 import sourceFormatOptions from "@config/formats.config";
 import styles from "./flows.module.scss";
-import {themeColors} from "@config/themes.config";
-import {useDropzone} from "react-dropzone";
+import { themeColors } from "@config/themes.config";
+import { useDropzone } from "react-dropzone";
 
 enum ReorderFlowOrderDirection {
   LEFT = "left",
@@ -131,8 +131,8 @@ const Flows: React.FC<Props> = ({
   const [hasQueriedInitialJobData, setHasQueriedInitialJobData] = useState(false);
   const [selectedStepOptions, setSelectedStepOptions] = useState<any>({}); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [currentFlowName, setCurrentFlowName] = useState(""); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const [arrayLoadChecksSteps, setArrayLoadChecksSteps] = useState<any>([{flowName: "", stepNumber: -1}]);
-  const [selectedStepDetails, setSelectedStepDetails] = useState<any>([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
+  const [arrayLoadChecksSteps, setArrayLoadChecksSteps] = useState<any>([{ flowName: "", stepNumber: -1 }]);
+  const [selectedStepDetails, setSelectedStepDetails] = useState<any>([{ stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false }]);
   const [flowsDeepCopy, setFlowsDeepCopy] = useState<any>([]);
   //const [runFlowClicked, setRunFlowClicked] = useState(false);
   const [checkAll, setCheckAll] = useState(true);
@@ -140,14 +140,14 @@ const Flows: React.FC<Props> = ({
   const location = useLocation();
 
   // maintain a list of panel refs
-  const flowPanels: any = flows.reduce((p, n) => ({...p, ...{[n.name]: createRef()}}), {});
+  const flowPanels: any = flows.reduce((p, n) => ({ ...p, ...{ [n.name]: createRef() } }), {});
 
   // Persists active keys in session storage as a user interacts with them
   useEffect(() => {
     if (activeKeys === undefined) {
       return;
     }
-    const newStorage = {...storage, run: {...storage.run, openFlows: activeKeys}};
+    const newStorage = { ...storage, run: { ...storage.run, openFlows: activeKeys } };
     setViewSettings(newStorage);
   }, [activeKeys]);
 
@@ -156,17 +156,17 @@ const Flows: React.FC<Props> = ({
     const scrollToEnd = f => {
       const panel = flowPanels[f];
       if (panel && panel.current) {
-        const {scrollWidth} = panel.current;
+        const { scrollWidth } = panel.current;
         panel.current.scrollIntoView();
         panel.current.scrollTo(scrollWidth * 2, 0);
       }
     };
     if (!flows.length) return;
-    const currentFlow = flows.filter(({name}) => name === flowName).shift();
+    const currentFlow = flows.filter(({ name }) => name === flowName).shift();
     if (currentFlow?.steps?.length > addFlowDirty[flowName]) {
       // Scrolling should happen on the last update after the number of steps in the flow has been updated
       scrollToEnd(flowName);
-      setAddFlowDirty({...addFlowDirty, [flowName]: currentFlow?.steps?.length});
+      setAddFlowDirty({ ...addFlowDirty, [flowName]: currentFlow?.steps?.length });
     } else {
       // if step is added from external view
       let state: any = location.state || {};
@@ -179,14 +179,13 @@ const Flows: React.FC<Props> = ({
     }
 
     if (flows !== undefined || flows !== null) {
-      {
         setFlowsDeepCopy(_.cloneDeep(flows));
         flows.map((flow) => (
           flow?.steps && flow.steps.map((step) => {
             controlsCheckboxes(step, step.stepDefinitionType?.toLowerCase(), flow.name);
           })
         ));
-      }
+      
 
       //Getting local storage in the load of the page if it exists
       if (getUserPreferencesLS() && getUserPreferencesLS()?.loadSelectedStepsUser) {
@@ -419,7 +418,7 @@ const Flows: React.FC<Props> = ({
       setActiveKeys(newActiveKeys);
     }
     await setAddStepDialogVisible(false);
-    await setAddFlowDirty({...addFlowDirty, [flowName]: flows[flowIndex].steps.length});
+    await setAddFlowDirty({ ...addFlowDirty, [flowName]: flows[flowIndex].steps.length });
   };
 
   const onCancel = () => {
@@ -438,7 +437,7 @@ const Flows: React.FC<Props> = ({
   };
 
   // Setup for file upload
-  const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
+  const { getRootProps, getInputProps, open, acceptedFiles } = useDropzone({
     noClick: true,
     noKeyboard: true
   });
@@ -609,7 +608,7 @@ const Flows: React.FC<Props> = ({
 
 
 
-      let data = {stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false, flowName: "", stepId: "", sourceFormat: ""};
+      let data = { stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false, flowName: "", stepId: "", sourceFormat: "" };
 
       data.stepName = checkedValues;
       data.stepNumber = stepNumber;
@@ -648,7 +647,7 @@ const Flows: React.FC<Props> = ({
       }
       setSelectedStepDetails(obj);
       selectedStepOptions[flowNames + "_" + checkedValues + "_" + stepDefinitionType?.toLowerCase()] = true;
-      setSelectedStepOptions({...selectedStepOptions, [flowNames + "_" + checkedValues + "_" + stepDefinitionType?.toLowerCase()]: originRender ? event.target.checked : true});
+      setSelectedStepOptions({ ...selectedStepOptions, [flowNames + "_" + checkedValues + "_" + stepDefinitionType?.toLowerCase()]: originRender ? event.target.checked : true });
       if (originRender) event.stopPropagation();
     }
   };
@@ -737,7 +736,7 @@ const Flows: React.FC<Props> = ({
 
     if (loadCheckStep) { loadCheckStep.checked = origin === "default" ? valueCheck : !valueCheck; } else {
       if (stepDefinitionType) {
-        loadCheckStep = {flowName: "", stepNumber: -1, checked: false};
+        loadCheckStep = { flowName: "", stepNumber: -1, checked: false };
         loadCheckStep.flowName = flowNameCheck;
         loadCheckStep.stepNumber = stepNumber;
         loadCheckStep.checked = origin === "default" ? true : valueCheck;
@@ -857,7 +856,7 @@ const Flows: React.FC<Props> = ({
               </div>
             </>
           ))))}
-        <Dropdown.Header className="py-0 fs-6 mt-2 text-danger" style={{whiteSpace: "pre-line"}} id="errorMessageEmptySteps">{controlStepSelected(flowName) ? "" : PopoverRunSteps.selectOneStepError}</Dropdown.Header>
+        <Dropdown.Header className="py-0 fs-6 mt-2 text-danger" style={{ whiteSpace: "pre-line" }} id="errorMessageEmptySteps">{controlStepSelected(flowName) ? "" : PopoverRunSteps.selectOneStepError}</Dropdown.Header>
       </>
     );
   };
@@ -1074,7 +1073,7 @@ const Flows: React.FC<Props> = ({
     e.stopPropagation();
     e.preventDefault();
     //parse for latest job to display
-    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({jobId: step.jobId, date: step.stepEndTime}));
+    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({ jobId: step.jobId, date: step.stepEndTime }));
     let sortedJobs = completedJobsWithDates.sort(dynamicSortDates("date"));
     setJobId(sortedJobs[0].jobId);
     setOpenJobResponse(true);
@@ -1083,7 +1082,7 @@ const Flows: React.FC<Props> = ({
   const OpenEditFlowDialog = (e, index) => {
     e.stopPropagation();
     setTitle("Edit Flow");
-    setFlowData(prevState => ({...prevState, ...flows[index]}));
+    setFlowData(prevState => ({ ...prevState, ...flows[index] }));
     setNewFlow(true);
   };
 
@@ -1092,7 +1091,7 @@ const Flows: React.FC<Props> = ({
   };
 
   const customRequest = async () => {
-    const filenames = fileList.map(({name}) => name);
+    const filenames = fileList.map(({ name }) => name);
     if (filenames.length) {
       let fl = fileList;
       const formData = new FormData();
@@ -1274,7 +1273,7 @@ const Flows: React.FC<Props> = ({
           let currentFlowJobInfo = {};
           currentFlowJobInfo[currentFlow["name"]] = response.data["steps"];
           setLatestJobData(prevJobData => (
-            {...prevJobData, ...currentFlowJobInfo}
+            { ...prevJobData, ...currentFlowJobInfo }
           ));
         }
       } catch (error) {
@@ -1283,175 +1282,181 @@ const Flows: React.FC<Props> = ({
     }
   };
 
-  let panels;
 
-  if (flows) {
-    panels = flows.map((flow, i) => {
-      let flowName = flow.name;
-      let cards = flow.steps.map((step, index) => {
-        let sourceFormat = step.sourceFormat;
-        let stepNumber = step.stepNumber;
-        let viewStepId = `${flowName}-${stepNumber}`;
-        let stepDefinitionType = step.stepDefinitionType ? step.stepDefinitionType.toLowerCase() : "";
-        let stepDefinitionTypeTitle = StepDefinitionTypeTitles[stepDefinitionType];
-        return (
-          <div key={viewStepId} id="flowSettings">
-            <HCCard
-              className={styles.cardStyle}
-              title={StepDefToTitle(step.stepDefinitionType)}
-              actions={[
-                <div className={styles.reorder}>
-                  {index !== 0 && canWriteFlow &&
-                    <div className={styles.reorderLeft}>
-                      <HCTooltip text={RunToolTips.moveLeft} id="move-left-tooltip" placement="bottom">
-                        <i>
-                          <FontAwesomeIcon
-                            aria-label={`leftArrow-${step.stepName}`}
-                            icon={faArrowAltCircleLeft}
-                            className={styles.reorderFlowLeft}
-                            role="button"
-                            onClick={() => reorderFlow(index, flowName, ReorderFlowOrderDirection.LEFT)}
-                            onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flowName, ReorderFlowOrderDirection.LEFT)}
-                            tabIndex={0} />
-                        </i>
-                      </HCTooltip>
-                    </div>
-                  }
-                  <div className={styles.reorderRight}>
-                    <div className={styles.stepResponse}>
-                      {latestJobData && latestJobData[flowName] && latestJobData[flowName][index]
-                        ? lastRunResponse(latestJobData[flowName][index], flowName)
-                        : ""
+  const renderPanels = () => {
+    console.log("Render panels", flows)
+    let panels;
+    if (flows) {
+      panels = flows.map((flow, i) => {
+        let flowName = flow.name;
+        let cards = flow.steps.map((step, index) => {
+          let sourceFormat = step.sourceFormat;
+          let stepNumber = step.stepNumber;
+          let viewStepId = `${flowName}-${stepNumber}`;
+          let stepDefinitionType = step.stepDefinitionType ? step.stepDefinitionType.toLowerCase() : "";
+          let stepDefinitionTypeTitle = StepDefinitionTypeTitles[stepDefinitionType];
+          return (
+            <div key={viewStepId} id="flowSettings">
+              <HCCard
+                className={styles.cardStyle}
+                title={StepDefToTitle(step.stepDefinitionType)}
+                actions={[
+                  <div className={styles.reorder}>
+                    {index !== 0 && canWriteFlow &&
+                      <div className={styles.reorderLeft}>
+                        <HCTooltip text={RunToolTips.moveLeft} id="move-left-tooltip" placement="bottom">
+                          <i>
+                            <FontAwesomeIcon
+                              aria-label={`leftArrow-${step.stepName}`}
+                              icon={faArrowAltCircleLeft}
+                              className={styles.reorderFlowLeft}
+                              role="button"
+                              onClick={() => reorderFlow(index, flowName, ReorderFlowOrderDirection.LEFT)}
+                              onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flowName, ReorderFlowOrderDirection.LEFT)}
+                              tabIndex={0} />
+                          </i>
+                        </HCTooltip>
+                      </div>
+                    }
+                    <div className={styles.reorderRight}>
+                      <div className={styles.stepResponse}>
+                        {latestJobData && latestJobData[flowName] && latestJobData[flowName][index]
+                          ? lastRunResponse(latestJobData[flowName][index], flowName)
+                          : ""
+                        }
+                      </div>
+                      {index < flow.steps.length - 1 && canWriteFlow &&
+                        <HCTooltip aria-label="icon: right" text="Move right" id="move-right-tooltip" placement="bottom" >
+                          <i>
+                            <FontAwesomeIcon
+                              aria-label={`rightArrow-${step.stepName}`}
+                              icon={faArrowAltCircleRight}
+                              className={styles.reorderFlowRight}
+                              role="button"
+                              onClick={() => reorderFlow(index, flowName, ReorderFlowOrderDirection.RIGHT)}
+                              onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flowName, ReorderFlowOrderDirection.RIGHT)}
+                              tabIndex={0} />
+                          </i>
+                        </HCTooltip>
                       }
                     </div>
-                    {index < flow.steps.length - 1 && canWriteFlow &&
-                      <HCTooltip aria-label="icon: right" text="Move right" id="move-right-tooltip" placement="bottom" >
-                        <i>
-                          <FontAwesomeIcon
-                            aria-label={`rightArrow-${step.stepName}`}
-                            icon={faArrowAltCircleRight}
-                            className={styles.reorderFlowRight}
-                            role="button"
-                            onClick={() => reorderFlow(index, flowName, ReorderFlowOrderDirection.RIGHT)}
-                            onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flowName, ReorderFlowOrderDirection.RIGHT)}
-                            tabIndex={0} />
-                        </i>
-                      </HCTooltip>
-                    }
                   </div>
-                </div>
-              ]}
-              titleExtra={
-                <div className={styles.actions}>
-                  {hasOperatorRole ?
-                    step.stepDefinitionType.toLowerCase() === "ingestion" ?
-                      <div {...getRootProps()} style={{display: "inline-block"}}>
-                        <input {...getInputProps()} id="fileUpload" />
+                ]}
+                titleExtra={
+                  <div className={styles.actions}>
+                    {hasOperatorRole ?
+                      step.stepDefinitionType.toLowerCase() === "ingestion" ?
+                        <div {...getRootProps()} style={{ display: "inline-block" }}>
+                          <input {...getInputProps()} id="fileUpload" />
+                          <div
+                            className={styles.run}
+                            aria-label={`runStep-${step.stepName}`}
+                            data-testid={"runStep-" + stepNumber}
+                            onClick={() => {
+                              setShowUploadError(false);
+                              setSingleIngest(true);
+                              setRunningStep(step);
+                              setRunningFlow(flowName);
+                              openFilePicker();
+                            }}
+                          >
+                            <HCTooltip text={RunToolTips.ingestionStep} id="run-ingestion-tooltip" placement="bottom">
+                              <PlayCircleFill aria-label="icon: play-circle" color={themeColors.defaults.questionCircle} size={20} />
+                            </HCTooltip>
+                          </div>
+                        </div>
+                        :
                         <div
                           className={styles.run}
-                          aria-label={`runStep-${step.stepName}`}
-                          data-testid={"runStep-" + stepNumber}
                           onClick={() => {
                             setShowUploadError(false);
-                            setSingleIngest(true);
-                            setRunningStep(step);
-                            setRunningFlow(flowName);
-                            openFilePicker();
+                            runStep(flowName, step);
                           }}
+                          aria-label={`runStep-${step.stepName}`}
+                          data-testid={"runStep-" + stepNumber}
                         >
-                          <HCTooltip text={RunToolTips.ingestionStep} id="run-ingestion-tooltip" placement="bottom">
+                          <HCTooltip text={RunToolTips.otherSteps} id="run-tooltip" placement="bottom">
                             <PlayCircleFill aria-label="icon: play-circle" color={themeColors.defaults.questionCircle} size={20} />
                           </HCTooltip>
                         </div>
-                      </div>
                       :
                       <div
-                        className={styles.run}
-                        onClick={() => {
-                          setShowUploadError(false);
-                          runStep(flowName, step);
-                        }}
-                        aria-label={`runStep-${step.stepName}`}
-                        data-testid={"runStep-" + stepNumber}
+                        className={styles.disabledRun}
+                        onClick={(event) => { event.stopPropagation(); event.preventDefault(); }}
+                        aria-label={"runStepDisabled-" + step.stepName}
+                        data-testid={"runStepDisabled-" + stepNumber}
                       >
-                        <HCTooltip text={RunToolTips.otherSteps} id="run-tooltip" placement="bottom">
-                          <PlayCircleFill aria-label="icon: play-circle" color={themeColors.defaults.questionCircle} size={20} />
-                        </HCTooltip>
+                        <PlayCircleFill size={20} />
                       </div>
-                    :
-                    <div
-                      className={styles.disabledRun}
-                      onClick={(event) => { event.stopPropagation(); event.preventDefault(); }}
-                      aria-label={"runStepDisabled-" + step.stepName}
-                      data-testid={"runStepDisabled-" + stepNumber}
-                    >
-                      <PlayCircleFill size={20} />
-                    </div>
-                  }
-                  {canWriteFlow ?
-                    <HCTooltip text={RunToolTips.removeStep} id="delete-step-tooltip" placement="bottom">
-                      <div className={styles.delete} aria-label={`deleteStep-${step.stepName}`} onClick={() => handleStepDelete(flowName, step)}>
-                        <X aria-label="icon: close" color={themeColors.primary} size={27} />
-                      </div>
-                    </HCTooltip> :
-                    <HCTooltip text={RunToolTips.removeStep} id="delete-step-tooltip" placement="bottom">
-                      <div className={styles.disabledDelete} aria-label={`deleteStepDisabled-${step.stepName}`} onClick={(event) => { event.stopPropagation(); event.preventDefault(); }}>
-                        <X aria-label="icon: close" color={themeColors.primary} size={27} />
-                      </div>
-                    </HCTooltip>
-                  }
-                </div>
-              }
-              footerClassName={styles.cardFooter}
-            >
-              <div aria-label={viewStepId + "-content"} className={styles.cardContent}
-                onMouseOver={(e) => handleMouseOver(e, viewStepId)}
-                onMouseLeave={(e) => setShowLinks("")} >
-                {sourceFormat ?
-                  <div className={styles.format} style={sourceFormatStyle(sourceFormat)} >{sourceFormatOptions[sourceFormat].label}</div>
-                  : null}
-                <div className={sourceFormat ? styles.loadStepName : styles.name}>{step.stepName}</div>
-                <div className={styles.cardLinks}
-                  style={{display: showLinks === viewStepId && step.stepId && authorityByStepType[stepDefinitionType] ? "block" : "none"}}
-                  aria-label={viewStepId + "-cardlink"}
-                >
-                  <Link id={"tiles-step-view-" + viewStepId}
-                    to={{
-                      pathname: `/tiles/${stepDefinitionType.toLowerCase() === "ingestion" ? "load" : "curate"}`,
-                      state: {
-                        stepToView: step.stepId,
-                        stepDefinitionType: stepDefinitionType,
-                        targetEntityType: step.targetEntityType
-                      }
-                    }}
+                    }
+                    {canWriteFlow ?
+                      <HCTooltip text={RunToolTips.removeStep} id="delete-step-tooltip" placement="bottom">
+                        <div className={styles.delete} aria-label={`deleteStep-${step.stepName}`} onClick={() => handleStepDelete(flowName, step)}>
+                          <X aria-label="icon: close" color={themeColors.primary} size={27} />
+                        </div>
+                      </HCTooltip> :
+                      <HCTooltip text={RunToolTips.removeStep} id="delete-step-tooltip" placement="bottom">
+                        <div className={styles.disabledDelete} aria-label={`deleteStepDisabled-${step.stepName}`} onClick={(event) => { event.stopPropagation(); event.preventDefault(); }}>
+                          <X aria-label="icon: close" color={themeColors.primary} size={27} />
+                        </div>
+                      </HCTooltip>
+                    }
+                  </div>
+                }
+                footerClassName={styles.cardFooter}
+              >
+                <div aria-label={viewStepId + "-content"} className={styles.cardContent}
+                  onMouseOver={(e) => handleMouseOver(e, viewStepId)}
+                  onMouseLeave={(e) => setShowLinks("")} >
+                  {sourceFormat ?
+                    <div className={styles.format} style={sourceFormatStyle(sourceFormat)} >{sourceFormatOptions[sourceFormat].label}</div>
+                    : null}
+                  <div className={sourceFormat ? styles.loadStepName : styles.name}>{step.stepName}</div>
+                  <div className={styles.cardLinks}
+                    style={{ display: showLinks === viewStepId && step.stepId && authorityByStepType[stepDefinitionType] ? "block" : "none" }}
+                    aria-label={viewStepId + "-cardlink"}
                   >
-                    <div className={styles.cardLink} data-testid={`${viewStepId}-viewStep`}>View {stepDefinitionTypeTitle} steps</div>
-                  </Link>
+                    <Link id={"tiles-step-view-" + viewStepId}
+                      to={{
+                        pathname: `/tiles/${stepDefinitionType.toLowerCase() === "ingestion" ? "load" : "curate"}`,
+                        state: {
+                          stepToView: step.stepId,
+                          stepDefinitionType: stepDefinitionType,
+                          targetEntityType: step.targetEntityType
+                        }
+                      }}
+                    >
+                      <div className={styles.cardLink} data-testid={`${viewStepId}-viewStep`}>View {stepDefinitionTypeTitle} steps</div>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-              <div className={styles.uploadError}>
-                {showUploadError && flowName === runningFlow && stepNumber === runningStep.stepNumber ? uploadError : ""}
-              </div>
-            </HCCard>
-          </div>
+                <div className={styles.uploadError}>
+                  {showUploadError && flowName === runningFlow && stepNumber === runningStep.stepNumber ? uploadError : ""}
+                </div>
+              </HCCard>
+            </div>
+          );
+        });
+        return (
+          <Accordion className={"w-100"} flush key={i} id={flowName} activeKey={activeKeys.includes(i) ? i : ""} defaultActiveKey={activeKeys.includes(i) ? i : ""}>
+            <Accordion.Item eventKey={i}>
+              <Card>
+                <Card.Header className={"p-0 pe-3 d-flex bg-white"}>
+                  <Accordion.Button data-testid={`accordion-${flowName}`} onClick={() => handlePanelInteraction(i)}>{flowHeader(flowName, i)}</Accordion.Button>
+                  {panelActions(flowName, i)}
+                </Card.Header>
+                <Accordion.Body className={styles.panelContent} ref={flowPanels[flowName]}>
+                  {cards}
+                </Accordion.Body>
+              </Card>
+            </Accordion.Item>
+          </Accordion>
         );
       });
-      return (
-        <Accordion className={"w-100"} flush key={i} id={flowName} activeKey={activeKeys.includes(i) ? i : ""} defaultActiveKey={activeKeys.includes(i) ? i : ""}>
-          <Accordion.Item eventKey={i}>
-            <Card>
-              <Card.Header className={"p-0 pe-3 d-flex bg-white"}>
-                <Accordion.Button data-testid={`accordion-${flowName}`} onClick={() => handlePanelInteraction(i)}>{flowHeader(flowName, i)}</Accordion.Button>
-                {panelActions(flowName, i)}
-              </Card.Header>
-              <Accordion.Body className={styles.panelContent} ref={flowPanels[flowName]}>
-                {cards}
-              </Accordion.Body>
-            </Card>
-          </Accordion.Item>
-        </Accordion>
-      );
-    });
+    }
+    return (<>
+      {panels}
+    </>)
   }
 
   //Update activeKeys on Collapse Panel interactions
@@ -1518,7 +1523,7 @@ const Flows: React.FC<Props> = ({
                 </HCTooltip>
             }
           </div>
-          {panels}
+          {renderPanels()}
           <NewFlowDialog
             newFlow={newFlow || openNewFlow}
             title={title}
