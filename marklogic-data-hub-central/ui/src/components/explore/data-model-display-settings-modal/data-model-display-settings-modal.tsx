@@ -83,7 +83,6 @@ const DataModelDisplaySettingsModal: React.FC<Props> = ({isVisible, toggleModal,
         setConceptDisplaySettingsData(conceptSettingsData);
       }
     }
-
     return () => {
       setEntitiesData({});
       setEntitiesIndexes({});
@@ -98,14 +97,23 @@ const DataModelDisplaySettingsModal: React.FC<Props> = ({isVisible, toggleModal,
   }, [isVisible, hubCentralConfig]);
 
   useEffect(() => {
-    getEntityModels();
+    let cancel = false;
+
+    getEntityModels().then((response) => {
+      if (cancel) return;
+      setEntityModels({...convertArrayOfEntitiesToObject(response)});
+    });
+
+    return (() => {
+      cancel = true;
+    });
   }, []);
 
   const getEntityModels = async () => {
     try {
       let response = await primaryEntityTypes();
       if (response.status === 200) {
-        setEntityModels({...convertArrayOfEntitiesToObject(response.data)});
+        return response.data;
       }
     } catch (error) {
       console.error("Error fetching entities", error);

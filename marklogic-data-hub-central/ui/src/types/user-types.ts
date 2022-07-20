@@ -7,6 +7,8 @@ export interface UserContextInterface {
 }
 
 export interface IUserContextInterface {
+    authed: boolean,
+  setAuthed: any,
     user: UserContextInterface;
     loginAuthenticated: (username: string, authResponse: any) => void;
     sessionAuthenticated: (username: string) => void;

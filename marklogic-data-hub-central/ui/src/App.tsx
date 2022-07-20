@@ -2,7 +2,7 @@ import React, {useEffect, useContext} from "react";
 import axios from "axios";
 import {Switch} from "react-router";
 import {Route, Redirect, RouteComponentProps, withRouter} from "react-router-dom";
-import {UserContext} from "@util/user-context";
+import {UserContext, default as UserProvider} from "@util/user-context";
 import SearchProvider from "@util/search-context";
 import ModelingProvider from "@util/modeling-context";
 import CurationProvider from "@util/curation-context";
@@ -30,12 +30,13 @@ interface Props extends RouteComponentProps<any> { }
 const App: React.FC<Props> = ({history, location}) => {
   const {
     user,
+    authed,
     handleError
   } = useContext(UserContext);
 
   const PrivateRoute = ({children, ...rest}) => (
     <Route {...rest} render={props => (
-      user.authenticated === true ? (
+      authed === true ? (
         children
       ) : (
         <Redirect push={true} to={{
@@ -57,7 +58,8 @@ const App: React.FC<Props> = ({history, location}) => {
   };
 
   useEffect(() => {
-    if (user.authenticated) {
+    console.log("App: authed effect", {User: user, History: history, Location: location, isAuthed: authed});
+    if (authed) {
       if (location.pathname === "/") {
         history.push(user.pageRoute);
       } else if (location.pathname === "/tiles/run/add" || location.pathname === "/tiles/run/add-run" || location.pathname === "/tiles/run/run-step") {
@@ -71,11 +73,12 @@ const App: React.FC<Props> = ({history, location}) => {
       }
       user.pageRoute = getPageRoute(location);
     }
-  }, [user]);
+  }, [authed]);
 
   useEffect(() => {
+    console.log({User: user, History: history, Location: location});
     // On route change...
-    if (user.authenticated) {
+    if (authed) {
       axios.get("/api/environment/systemInfo")
         .then(res => { })
         // Timeouts throw 401s and are caught here

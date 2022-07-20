@@ -15,6 +15,8 @@ const defaultUserData: UserContextInterface = {
 
 const defaultUserContext: IUserContextInterface = {
   user: defaultUserData,
+  authed: false,
+  setAuthed: jest.fn(),
   loginAuthenticated: jest.fn(),
   sessionAuthenticated: jest.fn(),
   userNotAuthenticated: jest.fn(),
@@ -52,6 +54,9 @@ export const userSessionWarning: IUserContextInterface = {
     pageRoute: "/",
     maxSessionTime: MAX_SESSION_TIME
   },
+
+  authed: true,
+  setAuthed: jest.fn(),
   loginAuthenticated: jest.fn(),
   sessionAuthenticated: jest.fn(),
   setPageRoute: jest.fn(),
@@ -75,6 +80,8 @@ export const userModalError: IUserContextInterface = {
     pageRoute: "/",
     maxSessionTime: MAX_SESSION_TIME
   },
+  authed: false,
+  setAuthed: jest.fn(),
   loginAuthenticated: jest.fn(),
   sessionAuthenticated: jest.fn(),
   setPageRoute: jest.fn(),
@@ -98,6 +105,9 @@ export const userNoErrorNoSessionWarning: IUserContextInterface = {
     pageRoute: "/",
     maxSessionTime: MAX_SESSION_TIME
   },
+
+  authed: false,
+  setAuthed: jest.fn(),
   loginAuthenticated: jest.fn(),
   sessionAuthenticated: jest.fn(),
   setPageRoute: jest.fn(),
@@ -110,6 +120,9 @@ export const userNoErrorNoSessionWarning: IUserContextInterface = {
 };
 
 export const userHasModalErrorHasSessionWarning: IUserContextInterface = {
+
+  authed: false,
+  setAuthed: jest.fn(),
   user: {
     name: "",
     authenticated: false,

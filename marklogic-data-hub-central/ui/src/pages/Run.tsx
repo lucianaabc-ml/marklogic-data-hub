@@ -36,6 +36,7 @@ const Run = (props) => {
   const [openJobResponse, setOpenJobResponse] = useState<boolean>(false);
   const [jobId, setJobId] = useState<string>("");
   const [userCanStopFlow, setUserCanStopFlow] = useState<boolean>(false);
+  console.log("Render Run component", props);
   // For role-based privileges
   const authorityService = useContext(AuthoritiesContext);
   const canReadFlow = authorityService.canReadFlow();
@@ -53,15 +54,31 @@ const Run = (props) => {
   };
 
   useEffect(() => {
-    getFlows();
-    getSteps();
-    return (() => {
-      setFlows([]);
-      setSteps([]);
+    let cancel = false;
+    console.log("Run onMount", props);
+
+    getFlows().then((response) => {
+      if (cancel) return;
+      setFlows(response);
     });
-  }, [isLoading]);
+
+    getSteps().then((response) => {
+      if (cancel) return;
+      setSteps(response);
+    });
+
+    return (() => {
+      console.log("Run unmounted");
+      cancel = true;
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log("Run: Flows effect", flows);
+  }, [flows]);
 
   const getFlows = async () => {
+    console.log("Get flows");
     try {
       let response = await axios.get("/api/flows");
       if (response.status === 200) {
@@ -69,7 +86,7 @@ const Run = (props) => {
           let key = [response.data.findIndex(el => el.name === newFlowName)];
           setFlowsDefaultActiveKey(key);
         }
-        setFlows(response.data);
+        return response.data;
       }
     } catch (error) {
       console.error("Error getting flows", error.response);
@@ -83,10 +100,11 @@ const Run = (props) => {
   };
 
   const getSteps = async () => {
+    console.log("Get steps");
     try {
       let response = await axios.get("/api/steps");
       if (response.status === 200) {
-        setSteps(response.data);
+        return response.data;
       }
     } catch (error) {
       console.error("Error getting steps", error);
@@ -224,15 +242,15 @@ const Run = (props) => {
     return new Promise(checkStatus);
   }
 
-  const getFlowRunning = (flowName:string, stepNumbers: string[]) => {
+  const getFlowRunning = (flowName: string, stepNumbers: string[]) => {
     const flow = flows.find(flow => flow.name === flowName);
     const _stepsRunning = flow?.steps?.filter(step => { return stepNumbers.includes(step.stepNumber); });
     (flow && _stepsRunning) ? setFlowRunning({...flow, steps: _stepsRunning}) : setFlowRunning(InitialFlow);
   };
 
-  const runFlowSteps = async (flowName: string, steps: Step[], formData:any) => {
+  const runFlowSteps = async (flowName: string, steps: Step[], formData: any) => {
     setIsStepRunning(true);
-    let stepNumbers: string[]= [];
+    let stepNumbers: string[] = [];
     for (let step of steps) {
       stepNumbers.push(step.stepNumber);
     }
@@ -266,7 +284,7 @@ const Run = (props) => {
                 setRunEnded({flowId: flowName, stepId: steps[i].stepNumber});
                 showStepRunResponse(jobId);
               }
-            }).catch(function(error) {
+            }).catch(function (error) {
               console.error("Flow timeout", error);
               for (let i = 0; i < steps.length; i++) {
                 setRunEnded({flowId: flowName, stepId: steps[i]});
@@ -327,8 +345,7 @@ const Run = (props) => {
       }
     } catch (error) {
       console.error("Error running step", error);
-      setRunEnded({flowId: flowName, stepId: stepNumber});
-      setIsStepRunning(false);
+      setRunEnded({flowId: flowName, stepId: stepNumber}); setIsStepRunning(false);
       if (error.response && error.response.data && (error.response.data.message.includes("The total size of all files in a single upload must be 100MB or less.") || error.response.data.message.includes("Uploading files to server failed"))) {
         setUploadError(error.response.data.message);
       } else {
@@ -380,7 +397,7 @@ const Run = (props) => {
                 </div> */}
                 {/* ---------------------------------------------------------------------------------------- */}
               </div>,
-              <Flows
+              !isLoading && flows.length > 0 ? (<Flows
                 key={"run-flows-list"}
                 flows={flows}
                 steps={steps}
@@ -405,13 +422,13 @@ const Run = (props) => {
                 setOpenJobResponse={setOpenJobResponse}
                 isStepRunning={isStepRunning}
                 canUserStopFlow={userCanStopFlow}
-              />]
+              />) : null]
             :
             <p>{MissingPagePermission}</p>
         }
       </div>
       <JobResponse setUserCanStopFlow={setUserCanStopFlow}
-        setIsStepRunning={setIsStepRunning} stopRun={stopRun}jobId={jobId} openJobResponse={openJobResponse} setOpenJobResponse={setOpenJobResponse} flow={flowRunning}/>
+        setIsStepRunning={setIsStepRunning} stopRun={stopRun} jobId={jobId} openJobResponse={openJobResponse} setOpenJobResponse={setOpenJobResponse} flow={flowRunning} />
     </div>
   );
 };

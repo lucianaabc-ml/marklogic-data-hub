@@ -1,28 +1,28 @@
+import React, {CSSProperties, createRef, useContext, useEffect, useState} from "react";
 import "./flows.scss";
 
 import * as _ from "lodash";
 
-import { Accordion, ButtonGroup, Card, Dropdown, Modal } from "react-bootstrap";
-import { ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, X, XCircleFill } from "react-bootstrap-icons";
-import { HCButton, HCCard, HCCheckbox, HCTooltip } from "@components/common";
-import { Link, useLocation } from "react-router-dom";
-import { PopoverRunSteps, RunToolTips, SecurityTooltips } from "@config/tooltips.config";
-import React, { CSSProperties, createRef, useContext, useEffect, useState } from "react";
-import { getViewSettings, setViewSettings } from "@util/user-context";
-import { faArrowAltCircleLeft, faArrowAltCircleRight, faTrashAlt } from "@fortawesome/free-regular-svg-icons";
-import { faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle } from "@fortawesome/free-solid-svg-icons";
-import { getUserPreferences, updateUserPreferences } from "../../../src/services//user-preferences";
+import {Accordion, ButtonGroup, Card, Dropdown, Modal} from "react-bootstrap";
+import {PopoverRunSteps, RunToolTips, SecurityTooltips} from "@config/tooltips.config";
+import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, X, XCircleFill} from "react-bootstrap-icons";
+import {HCButton, HCCard, HCCheckbox, HCTooltip} from "@components/common";
+import {Link, useLocation} from "react-router-dom";
+import {getViewSettings, setViewSettings} from "@util/user-context";
+import {faArrowAltCircleLeft, faArrowAltCircleRight, faTrashAlt} from "@fortawesome/free-regular-svg-icons";
+import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
+import {getUserPreferences, updateUserPreferences} from "../../../src/services//user-preferences";
 
-import { AuthoritiesContext } from "@util/authorities";
-import { Flow } from "../../types/run-types";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {AuthoritiesContext} from "@util/authorities";
+import {Flow} from "../../types/run-types";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import NewFlowDialog from "./new-flow-dialog/new-flow-dialog";
 import axios from "axios";
-import { dynamicSortDates } from "@util/conversionFunctions";
+import {dynamicSortDates} from "@util/conversionFunctions";
 import sourceFormatOptions from "@config/formats.config";
 import styles from "./flows.module.scss";
-import { themeColors } from "@config/themes.config";
-import { useDropzone } from "react-dropzone";
+import {themeColors} from "@config/themes.config";
+import {useDropzone} from "react-dropzone";
 
 enum ReorderFlowOrderDirection {
   LEFT = "left",
@@ -70,31 +70,32 @@ const StepDefinitionTypeTitles = {
   "custom": "Custom"
 };
 
-const Flows: React.FC<Props> = ({
-  flows,
-  steps,
-  deleteFlow,
-  createFlow,
-  updateFlow,
-  deleteStep,
-  stopRun,
-  runStep,
-  runFlowSteps,
-  canReadFlow,
-  canWriteFlow,
-  hasOperatorRole,
-  flowRunning,
-  uploadError,
-  newStepToFlowOptions,
-  addStepToFlow,
-  flowsDefaultActiveKey,
-  runEnded,
-  onReorderFlow,
-  setJobId,
-  setOpenJobResponse,
-  isStepRunning,
-  canUserStopFlow,
-}) => {
+const Flows: React.FC<Props> = (props) => {
+  console.log("Render flows component", props);
+  const {
+    flows,
+    steps,
+    deleteFlow,
+    createFlow,
+    updateFlow,
+    deleteStep,
+    stopRun,
+    runStep,
+    runFlowSteps,
+    canReadFlow,
+    canWriteFlow,
+    hasOperatorRole,
+    flowRunning,
+    uploadError,
+    newStepToFlowOptions,
+    addStepToFlow,
+    flowsDefaultActiveKey,
+    runEnded,
+    onReorderFlow,
+    setJobId,
+    setOpenJobResponse,
+    isStepRunning,
+    canUserStopFlow} = props;
   const storage = getViewSettings();
   const openFlows = storage?.run?.openFlows;
   const hasDefaultKey = JSON.stringify(newStepToFlowOptions?.flowsDefaultKey) !== JSON.stringify(["-1"]);
@@ -131,8 +132,8 @@ const Flows: React.FC<Props> = ({
   const [hasQueriedInitialJobData, setHasQueriedInitialJobData] = useState(false);
   const [selectedStepOptions, setSelectedStepOptions] = useState<any>({}); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [currentFlowName, setCurrentFlowName] = useState(""); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const [arrayLoadChecksSteps, setArrayLoadChecksSteps] = useState<any>([{ flowName: "", stepNumber: -1 }]);
-  const [selectedStepDetails, setSelectedStepDetails] = useState<any>([{ stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false }]);
+  const [arrayLoadChecksSteps, setArrayLoadChecksSteps] = useState<any>([{flowName: "", stepNumber: -1}]);
+  const [selectedStepDetails, setSelectedStepDetails] = useState<any>([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
   const [flowsDeepCopy, setFlowsDeepCopy] = useState<any>([]);
   //const [runFlowClicked, setRunFlowClicked] = useState(false);
   const [checkAll, setCheckAll] = useState(true);
@@ -140,33 +141,34 @@ const Flows: React.FC<Props> = ({
   const location = useLocation();
 
   // maintain a list of panel refs
-  const flowPanels: any = flows.reduce((p, n) => ({ ...p, ...{ [n.name]: createRef() } }), {});
+  const flowPanels: any = flows.reduce((p, n) => ({...p, ...{[n.name]: createRef()}}), {});
 
   // Persists active keys in session storage as a user interacts with them
   useEffect(() => {
     if (activeKeys === undefined) {
       return;
     }
-    const newStorage = { ...storage, run: { ...storage.run, openFlows: activeKeys } };
+    const newStorage = {...storage, run: {...storage.run, openFlows: activeKeys}};
     setViewSettings(newStorage);
   }, [activeKeys]);
 
   // If a step was just added scroll the flow step panel fully to the right
   useEffect(() => {
+    console.log("Flows useEffect", flows);
     const scrollToEnd = f => {
       const panel = flowPanels[f];
       if (panel && panel.current) {
-        const { scrollWidth } = panel.current;
+        const {scrollWidth} = panel.current;
         panel.current.scrollIntoView();
         panel.current.scrollTo(scrollWidth * 2, 0);
       }
     };
     if (!flows.length) return;
-    const currentFlow = flows.filter(({ name }) => name === flowName).shift();
+    const currentFlow = flows.filter(({name}) => name === flowName).shift();
     if (currentFlow?.steps?.length > addFlowDirty[flowName]) {
       // Scrolling should happen on the last update after the number of steps in the flow has been updated
       scrollToEnd(flowName);
-      setAddFlowDirty({ ...addFlowDirty, [flowName]: currentFlow?.steps?.length });
+      setAddFlowDirty({...addFlowDirty, [flowName]: currentFlow?.steps?.length});
     } else {
       // if step is added from external view
       let state: any = location.state || {};
@@ -179,13 +181,13 @@ const Flows: React.FC<Props> = ({
     }
 
     if (flows !== undefined || flows !== null) {
-        setFlowsDeepCopy(_.cloneDeep(flows));
-        flows.map((flow) => (
+      setFlowsDeepCopy(_.cloneDeep(flows));
+      flows.map((flow) => (
           flow?.steps && flow.steps.map((step) => {
-            controlsCheckboxes(step, step.stepDefinitionType?.toLowerCase(), flow.name);
-          })
-        ));
-      
+          controlsCheckboxes(step, step.stepDefinitionType?.toLowerCase(), flow.name);
+        })
+      ));
+
 
       //Getting local storage in the load of the page if it exists
       if (getUserPreferencesLS() && getUserPreferencesLS()?.loadSelectedStepsUser) {
@@ -418,7 +420,7 @@ const Flows: React.FC<Props> = ({
       setActiveKeys(newActiveKeys);
     }
     await setAddStepDialogVisible(false);
-    await setAddFlowDirty({ ...addFlowDirty, [flowName]: flows[flowIndex].steps.length });
+    await setAddFlowDirty({...addFlowDirty, [flowName]: flows[flowIndex].steps.length});
   };
 
   const onCancel = () => {
@@ -437,7 +439,7 @@ const Flows: React.FC<Props> = ({
   };
 
   // Setup for file upload
-  const { getRootProps, getInputProps, open, acceptedFiles } = useDropzone({
+  const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
     noClick: true,
     noKeyboard: true
   });
@@ -608,7 +610,7 @@ const Flows: React.FC<Props> = ({
 
 
 
-      let data = { stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false, flowName: "", stepId: "", sourceFormat: "" };
+      let data = {stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false, flowName: "", stepId: "", sourceFormat: ""};
 
       data.stepName = checkedValues;
       data.stepNumber = stepNumber;
@@ -647,7 +649,7 @@ const Flows: React.FC<Props> = ({
       }
       setSelectedStepDetails(obj);
       selectedStepOptions[flowNames + "_" + checkedValues + "_" + stepDefinitionType?.toLowerCase()] = true;
-      setSelectedStepOptions({ ...selectedStepOptions, [flowNames + "_" + checkedValues + "_" + stepDefinitionType?.toLowerCase()]: originRender ? event.target.checked : true });
+      setSelectedStepOptions({...selectedStepOptions, [flowNames + "_" + checkedValues + "_" + stepDefinitionType?.toLowerCase()]: originRender ? event.target.checked : true});
       if (originRender) event.stopPropagation();
     }
   };
@@ -736,7 +738,7 @@ const Flows: React.FC<Props> = ({
 
     if (loadCheckStep) { loadCheckStep.checked = origin === "default" ? valueCheck : !valueCheck; } else {
       if (stepDefinitionType) {
-        loadCheckStep = { flowName: "", stepNumber: -1, checked: false };
+        loadCheckStep = {flowName: "", stepNumber: -1, checked: false};
         loadCheckStep.flowName = flowNameCheck;
         loadCheckStep.stepNumber = stepNumber;
         loadCheckStep.checked = origin === "default" ? true : valueCheck;
@@ -856,7 +858,7 @@ const Flows: React.FC<Props> = ({
               </div>
             </>
           ))))}
-        <Dropdown.Header className="py-0 fs-6 mt-2 text-danger" style={{ whiteSpace: "pre-line" }} id="errorMessageEmptySteps">{controlStepSelected(flowName) ? "" : PopoverRunSteps.selectOneStepError}</Dropdown.Header>
+        <Dropdown.Header className="py-0 fs-6 mt-2 text-danger" style={{whiteSpace: "pre-line"}} id="errorMessageEmptySteps">{controlStepSelected(flowName) ? "" : PopoverRunSteps.selectOneStepError}</Dropdown.Header>
       </>
     );
   };
@@ -1073,7 +1075,7 @@ const Flows: React.FC<Props> = ({
     e.stopPropagation();
     e.preventDefault();
     //parse for latest job to display
-    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({ jobId: step.jobId, date: step.stepEndTime }));
+    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({jobId: step.jobId, date: step.stepEndTime}));
     let sortedJobs = completedJobsWithDates.sort(dynamicSortDates("date"));
     setJobId(sortedJobs[0].jobId);
     setOpenJobResponse(true);
@@ -1082,7 +1084,7 @@ const Flows: React.FC<Props> = ({
   const OpenEditFlowDialog = (e, index) => {
     e.stopPropagation();
     setTitle("Edit Flow");
-    setFlowData(prevState => ({ ...prevState, ...flows[index] }));
+    setFlowData(prevState => ({...prevState, ...flows[index]}));
     setNewFlow(true);
   };
 
@@ -1091,7 +1093,7 @@ const Flows: React.FC<Props> = ({
   };
 
   const customRequest = async () => {
-    const filenames = fileList.map(({ name }) => name);
+    const filenames = fileList.map(({name}) => name);
     if (filenames.length) {
       let fl = fileList;
       const formData = new FormData();
@@ -1273,7 +1275,7 @@ const Flows: React.FC<Props> = ({
           let currentFlowJobInfo = {};
           currentFlowJobInfo[currentFlow["name"]] = response.data["steps"];
           setLatestJobData(prevJobData => (
-            { ...prevJobData, ...currentFlowJobInfo }
+            {...prevJobData, ...currentFlowJobInfo}
           ));
         }
       } catch (error) {
@@ -1284,7 +1286,6 @@ const Flows: React.FC<Props> = ({
 
 
   const renderPanels = () => {
-    console.log("Render panels", flows)
     let panels;
     if (flows) {
       panels = flows.map((flow, i) => {
@@ -1346,7 +1347,7 @@ const Flows: React.FC<Props> = ({
                   <div className={styles.actions}>
                     {hasOperatorRole ?
                       step.stepDefinitionType.toLowerCase() === "ingestion" ?
-                        <div {...getRootProps()} style={{ display: "inline-block" }}>
+                        <div {...getRootProps()} style={{display: "inline-block"}}>
                           <input {...getInputProps()} id="fileUpload" />
                           <div
                             className={styles.run}
@@ -1413,7 +1414,7 @@ const Flows: React.FC<Props> = ({
                     : null}
                   <div className={sourceFormat ? styles.loadStepName : styles.name}>{step.stepName}</div>
                   <div className={styles.cardLinks}
-                    style={{ display: showLinks === viewStepId && step.stepId && authorityByStepType[stepDefinitionType] ? "block" : "none" }}
+                    style={{display: showLinks === viewStepId && step.stepId && authorityByStepType[stepDefinitionType] ? "block" : "none"}}
                     aria-label={viewStepId + "-cardlink"}
                   >
                     <Link id={"tiles-step-view-" + viewStepId}
@@ -1456,8 +1457,8 @@ const Flows: React.FC<Props> = ({
     }
     return (<>
       {panels}
-    </>)
-  }
+    </>);
+  };
 
   //Update activeKeys on Collapse Panel interactions
   const handlePanelInteraction = (key) => {
@@ -1488,7 +1489,7 @@ const Flows: React.FC<Props> = ({
 
   return (
     <div id="flows-container" className={styles.flowsContainer}>
-      {canReadFlow || canWriteFlow ?
+      {(canReadFlow || canWriteFlow) ?
         <>
           <div className={styles.createContainer}>
             {

@@ -46,6 +46,8 @@ export function clearSessionStorageOnRefresh() {
 }
 
 export const UserContext = React.createContext<IUserContextInterface>({
+  authed: false,
+  setAuthed: () => {},
   user: defaultUserData,
   loginAuthenticated: () => { },
   sessionAuthenticated: () => { },
@@ -59,6 +61,8 @@ export const UserContext = React.createContext<IUserContextInterface>({
 });
 
 const UserProvider: React.FC<{ children: any }> = ({children}) => {
+  const sessionStorageValue = JSON.parse(sessionStorage.getItem("loggedIn")|| "{}");
+  const [authed, setAuthed] = useState<boolean>(sessionStorageValue);
   const [user, setUser] = useState<UserContextInterface>(defaultUserData);
   const [encounteredErrors, setEncounteredErrors] = useState<string[]>([]);
   const [stompMessageSubscription, setStompMessageSubscription] = useState<Subscription | null>(null);
@@ -70,6 +74,16 @@ const UserProvider: React.FC<{ children: any }> = ({children}) => {
   initialTimeoutDate.setSeconds(initialTimeoutDate.getSeconds() + MAX_SESSION_TIME);
   const sessionTimeoutDate = useRef<Date>(initialTimeoutDate);
   let history = useHistory();
+
+  useEffect(() => {
+    if (sessionUser) {
+      sessionAuthenticated(sessionUser);
+      let loginResponse = JSON.parse(localStorage.getItem("loginResp") || "{}");
+      if (JSON.stringify(loginResponse) !== JSON.stringify({})) {
+        loginAuthenticated(sessionUser, loginResponse);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (user.error.message !== "") {
@@ -196,6 +210,9 @@ const UserProvider: React.FC<{ children: any }> = ({children}) => {
     const authorities: string[] = authResponse.authorities || [];
     authoritiesService.setAuthorities(authorities);
 
+    setAuthed(true);
+    sessionStorage.setItem("loggedIn", "true");
+
     let userPreferences = getUserPreferences(username);
     if (userPreferences) {
       setUser({
@@ -250,6 +267,8 @@ const UserProvider: React.FC<{ children: any }> = ({children}) => {
       setEncounteredErrors([]);
       resetEnvironment();
     });
+    setAuthed(false);
+    sessionStorage.setItem("loggedIn", "false");
   };
 
   /*
@@ -403,19 +422,10 @@ const UserProvider: React.FC<{ children: any }> = ({children}) => {
     let timeoutDateSeconds = Math.floor(sessionTimeoutDate.current.getTime() / 1000);
     return timeoutDateSeconds - currentDateSeconds;
   };
-
-  useEffect(() => {
-    if (sessionUser) {
-      sessionAuthenticated(sessionUser);
-      let loginResponse = JSON.parse(localStorage.getItem("loginResp") || "{}");
-      if (JSON.stringify(loginResponse) !== JSON.stringify({})) {
-        loginAuthenticated(sessionUser, loginResponse);
-      }
-    }
-  }, []);
-
   return (
     <UserContext.Provider value={{
+      setAuthed,
+      authed,
       user,
       loginAuthenticated,
       sessionAuthenticated,
