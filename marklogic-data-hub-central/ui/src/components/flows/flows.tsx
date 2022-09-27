@@ -2,26 +2,19 @@ import "./flows.scss";
 
 import * as _ from "lodash";
 
-import {Accordion, ButtonGroup, Card, Dropdown, Modal} from "react-bootstrap";
-import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, X, XCircleFill} from "react-bootstrap-icons";
-import {HCButton, HCCard, HCCheckbox, HCTooltip} from "@components/common";
-import {Link, useLocation} from "react-router-dom";
-import {PopoverRunSteps, RunToolTips, SecurityTooltips} from "@config/tooltips.config";
-import React, {CSSProperties, createRef, useContext, useEffect, useState} from "react";
+import {HCButton, HCTooltip} from "@components/common";
+import { useLocation} from "react-router-dom";
+import { SecurityTooltips} from "@config/tooltips.config";
+import React, {createRef, useEffect, useState} from "react";
 import {getViewSettings, setViewSettings} from "@util/user-context";
-import {faArrowAltCircleLeft, faArrowAltCircleRight, faTrashAlt} from "@fortawesome/free-regular-svg-icons";
-import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
 import {getUserPreferences, updateUserPreferences} from "../../../src/services//user-preferences";
-import {AuthoritiesContext} from "@util/authorities";
 import {Flow, Step} from "../../types/run-types";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import NewFlowDialog from "./new-flow-dialog/new-flow-dialog";
 import axios from "axios";
-import {dynamicSortDates} from "@util/conversionFunctions";
-import sourceFormatOptions from "@config/formats.config";
 import styles from "./flows.module.scss";
-import {themeColors} from "@config/themes.config";
 import {useDropzone} from "react-dropzone";
+import {deleteConfirmationModal, deleteStepConfirmationModal, addStepConfirmationModal, addExistingStepConfirmationModal} from "./confirmation-modals"
+import FlowPanel from "./flowPanel";
 
 enum ReorderFlowOrderDirection {
   LEFT = "left",
@@ -94,6 +87,12 @@ const Flows: React.FC<Props> = ({
   isStepRunning,
   canUserStopFlow,
 }) => {
+  
+  // Setup for file upload
+  const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
+    noClick: true,
+    noKeyboard: true
+  });
   const storage = getViewSettings();
   const openFlows = storage?.run?.openFlows;
   const hasDefaultKey = JSON.stringify(newStepToFlowOptions?.flowsDefaultKey) !== JSON.stringify(["-1"]);
@@ -119,7 +118,6 @@ const Flows: React.FC<Props> = ({
       newStepToFlowOptions?.flowsDefaultKey :
       (openFlows ? openFlows : [])
   );
-  const [showLinks, setShowLinks] = useState("");
   const [startRun, setStartRun] = useState(false);
   const [latestJobData, setLatestJobData] = useState<any>({});
   const [singleIngest, setSingleIngest] = useState(false);
@@ -134,11 +132,10 @@ const Flows: React.FC<Props> = ({
   const [flowsDeepCopy, setFlowsDeepCopy] = useState<any>([]);
   //const [runFlowClicked, setRunFlowClicked] = useState(false);
   const [checkAll, setCheckAll] = useState({});
-  const [currentTooltip, setCurrentTooltip] = useState("");
   const location = useLocation();
 
   // maintain a list of panel refs
-  const flowPanels: any = flows.reduce((p, n) => ({...p, ...{[n.name]: createRef()}}), {});
+  const flowPanelsRef: any = flows.reduce((p, n) => ({...p, ...{[n.name]: createRef()}}), {});
 
   // Persists active keys in session storage as a user interacts with them
   useEffect(() => {
@@ -152,7 +149,7 @@ const Flows: React.FC<Props> = ({
   // If a step was just added scroll the flow step panel fully to the right
   useEffect(() => {
     const scrollToEnd = f => {
-      const panel = flowPanels[f];
+      const panel = flowPanelsRef[f];
       if (panel && panel.current) {
         const {scrollWidth} = panel.current;
         panel.current.scrollIntoView();
@@ -198,7 +195,7 @@ const Flows: React.FC<Props> = ({
     if (openFlows === undefined || flows.length === 0 || hasQueriedInitialJobData) {
       return;
     }
-
+    // Endpoint que devuelva el estado de todos los flows en vez de hacer uno por uno
     flows.forEach((flow, i) => {
       getFlowWithJobInfo(i);
     });
@@ -308,15 +305,27 @@ const Flows: React.FC<Props> = ({
     }
   }, [newStepToFlowOptions]);
 
-  // For role-based privileges
-  const authorityService = useContext(AuthoritiesContext);
-  const authorityByStepType = {
-    ingestion: authorityService.canReadLoad(),
-    mapping: authorityService.canReadMapping(),
-    matching: authorityService.canReadMatchMerge(),
-    merging: authorityService.canReadMatchMerge(),
-    custom: authorityService.canReadCustom()
-  };
+  useEffect(() => {
+    //When Refreshing or leaving the page, save the flag to get the local storage
+    return () => {
+      saveLocalStoragePreferences(true);
+    };
+  }, []);
+
+  useEffect(() => {
+    acceptedFiles.forEach(file => {
+      setFileList(prevState => [...prevState, file]);
+    });
+    if (startRun) {
+      setAddedFlowName("");
+      setStartRun(false);
+    }
+  }, [acceptedFiles]);
+
+  useEffect(() => {
+    customRequest();
+  }, [fileList]);
+
 
   const OpenAddNewDialog = () => {
     setCreateAdd(false);
@@ -324,34 +333,6 @@ const Flows: React.FC<Props> = ({
     setNewFlow(true);
   };
 
-  //Custom CSS for source Format
-  const sourceFormatStyle = (sourceFmt) => {
-    let customStyles: CSSProperties;
-    if (!sourceFmt) {
-      customStyles = {
-        float: "left",
-        backgroundColor: "#fff",
-        color: "#fff",
-        padding: "5px"
-      };
-    } else {
-      customStyles = {
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "35px",
-        width: "35px",
-        lineHeight: "35px",
-        backgroundColor: sourceFormatOptions[sourceFmt].color,
-        fontSize: sourceFmt === "json" ? "12px" : "13px",
-        borderRadius: "50%",
-        textAlign: "center",
-        color: "#ffffff",
-        verticalAlign: "middle"
-      };
-    }
-    return customStyles;
-  };
 
   const handleStepAdd = async (stepName, flowName, stepType) => {
     if (isStepInFlow(stepName, flowName)) {
@@ -454,123 +435,11 @@ const Flows: React.FC<Props> = ({
     return result;
   };
 
-  // Setup for file upload
-  const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
-    noClick: true,
-    noKeyboard: true
-  });
 
   const openFilePicker = () => {
     open();
     setStartRun(false);
   };
-
-  useEffect(() => {
-    acceptedFiles.forEach(file => {
-      setFileList(prevState => [...prevState, file]);
-    });
-    if (startRun) {
-      setAddedFlowName("");
-      setStartRun(false);
-    }
-  }, [acceptedFiles]);
-
-  useEffect(() => {
-    customRequest();
-  }, [fileList]);
-
-  const deleteConfirmation = (
-    <Modal
-      show={dialogVisible}
-    >
-      <Modal.Header className={"bb-none"}>
-        <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
-      </Modal.Header>
-      <Modal.Body className={"text-center pt-0 pb-4"}>
-        <div className={`mb-4 ${styles.confirmationText}`}>Are you sure you want to delete the <strong>{flowName}</strong> flow?</div>
-        <div>
-          <HCButton variant="outline-light" aria-label={"No"} className={"me-2"} onClick={onCancel}>
-            No
-          </HCButton>
-          <HCButton aria-label={"Yes"} variant="primary" type="submit" onClick={() => onOk(flowName)}>
-            Yes
-          </HCButton>
-        </div>
-      </Modal.Body>
-    </Modal>
-  );
-
-  const deleteStepConfirmation = (
-    <Modal
-      show={stepDialogVisible}
-    >
-      <Modal.Header className={"bb-none"}>
-        <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
-      </Modal.Header>
-      <Modal.Body className={"text-center pt-0 pb-4"}>
-        <div className={`mb-4 ${styles.confirmationText}`}>Are you sure you want to remove the <strong>{stepName}</strong> step from the <strong>{flowName}</strong> flow?</div>
-        <div>
-          <HCButton variant="outline-light" aria-label={"No"} className={"me-2"} onClick={onCancel}>
-            No
-          </HCButton>
-          <HCButton aria-label={"Yes"} variant="primary" type="submit" onClick={() => onStepOk(flowName, stepNumber)}>
-            Yes
-          </HCButton>
-        </div>
-      </Modal.Body>
-    </Modal>
-  );
-
-  const addStepConfirmation = (
-    <Modal
-      show={addStepDialogVisible}
-    >
-      <Modal.Header className={"bb-none"}>
-        <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
-      </Modal.Header>
-      <Modal.Body className={"text-center pt-0 pb-4"}>
-        <div className={`mb-4 ${styles.confirmationText}`}>
-          {
-            isStepInFlow(stepName, flowName)
-              ?
-              <p>The step <b>{stepName}</b> is already in the flow <b>{flowName}</b>. Would you like to add another instance?</p>
-              :
-              <p>Are you sure you want to add step <b>{stepName}</b> to flow <b>{flowName}</b>?</p>
-          }
-        </div>
-        <div>
-          <HCButton variant="outline-light" aria-label={"No"} className={"me-2"} onClick={onCancel}>
-            No
-          </HCButton>
-          <HCButton aria-label={"Yes"} variant="primary" type="submit" onClick={() => onAddStepOk(stepName, flowName, stepType)}>
-            Yes
-          </HCButton>
-        </div>
-      </Modal.Body>
-    </Modal>
-  );
-
-  const addExistingStepConfirmation = (
-    <Modal
-      show={addExistingStepDialogVisible}
-    >
-      <Modal.Header className={"bb-none"}>
-        <button type="button" className="btn-close" aria-label="Close" onClick={onCancel}></button>
-      </Modal.Header>
-      <Modal.Body className={"text-center pt-0 pb-4"}>
-        <div className={`mb-4 ${styles.confirmationText}`}>
-          {
-            <p>The step <b>{stepName}</b> is already in the flow <b>{flowName}</b>.</p>
-          }
-        </div>
-        <div>
-          <HCButton variant="primary" aria-label={"Ok"} type="submit" className={"me-2"} onClick={onConfirmOk}>
-            OK
-          </HCButton>
-        </div>
-      </Modal.Body>
-    </Modal>
-  );
 
   const onCheckboxChange = (event, checkedValues?, stepNumber?, stepDefinitionType?, flowNames?, stepId?, sourceFormat?, fromCheckAll?) => {
     let checkAllAux;
@@ -758,14 +627,6 @@ const Flows: React.FC<Props> = ({
     }
   };
 
-  useEffect(() => {
-    //When Refreshing or leaving the page, save the flag to get the local storage
-    return () => {
-      saveLocalStoragePreferences(true);
-    };
-  }, []);
-
-
   let flagOneLoadSelected = true, flowNameCheckAux = "";
   const handleArrayLoadChecksSteps = (flowNameCheck, stepName, stepNumber, stepDefinitionType, origin?) => {
     let loadCheckStep;
@@ -823,58 +684,176 @@ const Flows: React.FC<Props> = ({
     }
   };
 
-  const controlStepSelected = (flowName) => {
-    let obj = selectedStepDetails.find(obj => obj.flowName === flowName);
-    const obj2 = Object.keys(selectedStepOptions).find(obj => obj.includes(flowName));
-    if (obj && obj2) { return true; } else { return false; }
-  };
-
-  const isFlowEmpty = (flowName) => {
-    return flowsDeepCopy.filter((flow) => flow.name === flowName)[0]?.steps?.length < 1;
-  };
-
-
-  const controlDisabled = (step, flowName) => {
-    let disabledCheck = false;
-    const filteredaArray = arrayLoadChecksSteps && arrayLoadChecksSteps.filter(obj => {
-      return obj.flowName === flowName;
+  const handleRunFlow = async (index, name) => {
+    //setRunFlowClicked(true);
+    saveLocalStoragePreferences(false, true);
+    const setKey = async () => {
+      await setActiveKeys(`${index}`);
+    };
+    setRunningFlow(name);
+    let flag = false;
+    await selectedStepDetails.map(async step => {
+      if (step.stepDefinitionType.toLowerCase() === "ingestion" && step.flowName === name && step.isChecked) {
+        flag = true;
+        setRunningStep(step);
+        setSingleIngest(false);
+        await setKey();
+        await openFilePicker();
+      }
     });
-
-    if (filteredaArray.length > 0) {
-      const filteredaArrayAux = filteredaArray.filter(obj => {
-        return obj.checked === true && obj.stepNumber !== -1;
+    if (Object.keys(selectedStepOptions).length === 0 && selectedStepOptions.constructor === Object) {
+      flag = true;
+      await setKey();
+      await openFilePicker();
+    }
+    if (!flag) {
+      let _selectedStepDetails= [...selectedStepDetails];
+      let _selectedSteps: Step[] = _selectedStepDetails.filter((step) => {
+        return (step.flowName === name && step.isChecked === true);
       });
 
-      if (filteredaArrayAux.length > 0) {
-        const elemento = filteredaArrayAux.find(element => element.stepId === flowName + "-" + step?.stepName + "-" + step?.stepDefinitionType.toLowerCase() &&/* step.checked === true&&*/  element.stepNumber !== -1);
-        if (elemento) {
-          disabledCheck = false;
-        } else {
-          disabledCheck = true;
-
-        }
-      } else { disabledCheck = false; return false; }
+      await runFlowSteps(name, _selectedSteps)
+        .then(() => {
+          // setSelectedStepOptions({});
+          // setSelectedStepDetails([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
+          // setArrayLoadChecksSteps([{flowName: "", stepNumber: -1}]);
+        });
     }
-    return disabledCheck;
+
   };
 
-  let titleTypeStep; let currentTitle = "";
-  let mapTypeSteps = new Map([["mapping", "Mapping"], ["merging", "Merging"], ["custom", "Custom"], ["mastering", "Mastering"], ["ingestion", "Loading"]]);
-  const handleTitleSteps = (stepType) => {
-    if (currentTitle !== stepType) {
-      titleTypeStep = mapTypeSteps.get(stepType) ? mapTypeSteps.get(stepType) : "";
-    } else { titleTypeStep = ""; }
+  const handleRunSingleStep = async (flowName, step) => {
+    setShowUploadError(false);
+    await runStep(flowName, step);
+  };
+  
+  const customRequest = async () => {
+    const filenames = fileList.map(({name}) => name);
+    if (filenames.length) {
+      let fl = fileList;
+      const formData = new FormData();
 
-    currentTitle = stepType;
-    return titleTypeStep;
+      fl.forEach(file => {
+        formData.append("files", file);
+      });
+
+      if (singleIngest) {
+        await runStep(runningFlow, runningStep, formData)
+          .then(resp => {
+            setShowUploadError(true);
+            setFileList([]);
+          });
+      } else {
+        let stepNumbers = [{}];
+
+        stepNumbers = selectedStepDetails.filter(function (step) {
+          return step.flowName === runningFlow && step.isChecked === true;
+        });
+
+        await runFlowSteps(runningFlow, stepNumbers, formData)
+          .then(resp => {
+            setShowUploadError(true);
+            setFileList([]);
+            // setSelectedStepOptions({});
+            // setSelectedStepDetails([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
+            // setArrayLoadChecksSteps([{flowName: "", stepNumber: -1}]);
+            //setRunFlowClicked(false);
+          });
+      }
+    }
   };
 
-  const countLetters = (stepName) => {
-    let letterCount = stepName?.replace(/\s+/g, "").length;
-    return letterCount > 35;
+
+  const resetSelectedFlow = (flowName) => {
+    let arrayObjectsStepDetails = [...selectedStepDetails];
+    const arrayObjectsStepDetailsAux = arrayObjectsStepDetails.filter((step) => {
+      return step.flowName === flowName;
+    });
+    setSelectedStepDetails(arrayObjectsStepDetailsAux);
+
+    let arrayObjectsLoadChecksSteps = [...arrayLoadChecksSteps];
+    for (let i = 0; i < arrayObjectsLoadChecksSteps?.length; i++) {
+      if (arrayObjectsLoadChecksSteps[i]?.flowName === flowName?.trim()) {
+        arrayObjectsLoadChecksSteps.splice(i, 1);
+      }
+    }
+    setArrayLoadChecksSteps(arrayObjectsLoadChecksSteps);
+
+    let arraySelectedStepOptions = {...selectedStepOptions};
+    for (let key in arraySelectedStepOptions) if (key.startsWith(flowName + "-")) delete arraySelectedStepOptions[key];
+    setSelectedStepOptions(arraySelectedStepOptions);
+
+
+
+  };
+  const reorderFlow = (id, flowName, direction: ReorderFlowOrderDirection) => {
+    let flowNum = flows.findIndex((flow) => flow.name === flowName);
+    let flowDesc = flows[flowNum]["description"];
+    const stepList = flows[flowNum]["steps"];
+    let newSteps = stepList;
+
+    if (direction === ReorderFlowOrderDirection.RIGHT) {
+      if (id <= stepList.length - 2) {
+        newSteps = [...stepList];
+        const oldLeftStep = newSteps[id];
+        const oldRightStep = newSteps[id + 1];
+        newSteps[id] = oldRightStep;
+        newSteps[id + 1] = oldLeftStep;
+      }
+    } else {
+      if (id >= 1) {
+        newSteps = [...stepList];
+        const oldLeftStep = newSteps[id - 1];
+        const oldRightStep = newSteps[id];
+        newSteps[id - 1] = oldRightStep;
+        newSteps[id] = oldLeftStep;
+      }
+    }
+
+    let _steps: string[] = [];
+    for (let i = 0; i < newSteps.length; i++) {
+      newSteps[i].stepNumber = String(i + 1);
+      _steps.push(newSteps[i].stepId);
+    }
+
+    resetSelectedFlow(flowName);
+    saveLocalStoragePreferences(true, true);
+
+
+    const reorderedList = [...newSteps];
+    onReorderFlow(flowNum, reorderedList);
+    updateFlow(flowName, flowDesc, _steps);
+
   };
 
-  const flowMenu = (flowName) => {
+  const getFlowWithJobInfo = async (flowNum) => {
+    let currentFlow = flows[flowNum];
+
+    if (currentFlow === undefined) {
+      return;
+    }
+
+    if (currentFlow["steps"].length > 0) {
+      try {
+        let response = await axios.get("/api/flows/" + currentFlow.name + "/latestJobInfo");
+        if (response.status === 200 && response.data) {
+          let currentFlowJobInfo = {};
+          currentFlowJobInfo[currentFlow["name"]] = response.data["steps"];
+          setLatestJobData(prevJobData => (
+            {...prevJobData, ...currentFlowJobInfo}
+          ));
+        }
+      } catch (error) {
+        console.error("Error getting latest job info ", error);
+      }
+    }
+  };
+
+/*   const showStopButton = (flowName: string): boolean => {
+    if (!flowRunning) return false;
+    return (isStepRunning && flowRunning.name === flowName);
+  }; */
+/*   const flowMenu = (flowName) => {
     return (
       <>
         <Dropdown.Header className="py-0 fs-6 mb-2 text-dark">{PopoverRunSteps.selectStepTitle}</Dropdown.Header>
@@ -917,52 +896,8 @@ const Flows: React.FC<Props> = ({
       </>
     );
   };
-
-  const handleRunFlow = async (index, name) => {
-    //setRunFlowClicked(true);
-    saveLocalStoragePreferences(false, true);
-    const setKey = async () => {
-      await setActiveKeys(`${index}`);
-    };
-    setRunningFlow(name);
-    let flag = false;
-    await selectedStepDetails.map(async step => {
-      if (step.stepDefinitionType.toLowerCase() === "ingestion" && step.flowName === name && step.isChecked) {
-        flag = true;
-        setRunningStep(step);
-        setSingleIngest(false);
-        await setKey();
-        await openFilePicker();
-      }
-    });
-    if (Object.keys(selectedStepOptions).length === 0 && selectedStepOptions.constructor === Object) {
-      flag = true;
-      await setKey();
-      await openFilePicker();
-    }
-    if (!flag) {
-      let _selectedStepDetails= [...selectedStepDetails];
-      let _selectedSteps: Step[] = _selectedStepDetails.filter((step) => {
-        return (step.flowName === name && step.isChecked === true);
-      });
-
-      await runFlowSteps(name, _selectedSteps)
-        .then(() => {
-          // setSelectedStepOptions({});
-          // setSelectedStepDetails([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
-          // setArrayLoadChecksSteps([{flowName: "", stepNumber: -1}]);
-        });
-    }
-
-  };
-
-
-  const handleRunSingleStep = async (flowName, step) => {
-    setShowUploadError(false);
-    await runStep(flowName, step);
-  };
-
-  const stepMenu = (flowName, i) => (
+  */
+/*  const stepMenu = (flowName, i) => (
     <Dropdown align="end" >
       <Dropdown.Toggle data-testid={`addStep-${flowName}`} aria-label={`addStep-${flowName}`} disabled={!canWriteFlow} variant="outline-light" className={canWriteFlow ? styles.stepMenu : styles.stepMenuDisabled}>
         {
@@ -1031,13 +966,8 @@ const Flows: React.FC<Props> = ({
       </Dropdown.Menu>
     </Dropdown>
   );
-
-  const showStopButton = (flowName: string): boolean => {
-    if (!flowRunning) return false;
-    return (isStepRunning && flowRunning.name === flowName);
-  };
-
-  const panelActions = (name, i) => (
+*/
+/*  const panelActions = (name, i) => (
     <div
       className={styles.panelActionsContainer}
       id="panelActions"
@@ -1115,8 +1045,8 @@ const Flows: React.FC<Props> = ({
       </span>
     </div>
   );
-
-  const flowHeader = (name, index) => (
+*/
+/*  const flowHeader = (name, index) => (
     <span id={"flow-header-" + name} className={styles.flowHeader}>
       <HCTooltip text={canWriteFlow ? RunToolTips.flowEdit : RunToolTips.flowDetails} id="open-edit-tooltip" placement="bottom">
         <span className={styles.flowName} onClick={(e) => OpenEditFlowDialog(e, index)}>
@@ -1133,220 +1063,8 @@ const Flows: React.FC<Props> = ({
       }
     </span>
   );
-  const OpenFlowJobStatus = (e, index, name) => {
-    e.stopPropagation();
-    e.preventDefault();
-    //parse for latest job to display
-    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({jobId: step.jobId, date: step.stepEndTime}));
-    let sortedJobs = completedJobsWithDates.sort(dynamicSortDates("date"));
-    setJobId(sortedJobs[0].jobId);
-    setOpenJobResponse(true);
-  };
-
-  const OpenEditFlowDialog = (e, index) => {
-    e.stopPropagation();
-    setTitle("Edit Flow");
-    setFlowData(prevState => ({...prevState, ...flows[index]}));
-    setNewFlow(true);
-  };
-
-  const StepDefToTitle = (stepDef) => {
-    return (StepDefinitionTypeTitles[stepDef]) ? StepDefinitionTypeTitles[stepDef] : "Unknown";
-  };
-
-  const customRequest = async () => {
-    const filenames = fileList.map(({name}) => name);
-    if (filenames.length) {
-      let fl = fileList;
-      const formData = new FormData();
-
-      fl.forEach(file => {
-        formData.append("files", file);
-      });
-
-      if (singleIngest) {
-        await runStep(runningFlow, runningStep, formData)
-          .then(resp => {
-            setShowUploadError(true);
-            setFileList([]);
-          });
-      } else {
-        let stepNumbers = [{}];
-
-        stepNumbers = selectedStepDetails.filter(function (step) {
-          return step.flowName === runningFlow && step.isChecked === true;
-        });
-
-        await runFlowSteps(runningFlow, stepNumbers, formData)
-          .then(resp => {
-            setShowUploadError(true);
-            setFileList([]);
-            // setSelectedStepOptions({});
-            // setSelectedStepDetails([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
-            // setArrayLoadChecksSteps([{flowName: "", stepNumber: -1}]);
-            //setRunFlowClicked(false);
-          });
-      }
-    }
-  };
-
-  const isRunning = (flowId, stepId) => {
-    let result = flowRunning.steps?.find(r => (flowRunning.name === flowId && r.stepId === stepId));
-    return result !== undefined;
-  };
-
-  const handleMouseOver = (e, name) => {
-    setShowLinks(name);
-  };
-  const lastRunResponse = (step, flow) => {
-    let stepEndTime;
-    if (step.stepEndTime) {
-      stepEndTime = new Date(step.stepEndTime).toLocaleString();
-    }
-
-    let canceled = latestJobData[flow]?.some(function (stepObj) {
-      return stepObj.lastRunStatus?.includes("canceled");
-    });
-
-    if (!step.lastRunStatus && !canceled) {
-      return null;
-    }
-
-    if (isRunning(flowName, stepNumber)) {
-      return (
-        <HCTooltip text={RunToolTips.stepRunning} id="running-tooltip" placement="bottom">
-          <span>
-            <i><FontAwesomeIcon aria-label="icon: clock-circle" icon={faClock} className={styles.runningIcon} size="lg" data-testid={`running-${step.stepName}`} /></i>
-          </span>
-        </HCTooltip>
-      );
-    } else if (step.lastRunStatus?.includes("canceled") || (!step.lastRunStatus && canceled)) {
-      return (
-        <span>
-          <HCTooltip text={RunToolTips.stepCanceled(stepEndTime)} id="canceled-tooltip" placement="bottom">
-            <span>
-              <i><FontAwesomeIcon icon={faBan} aria-label="icon: canceled-circle" className={styles.canceledRun} /></i>
-            </span>
-          </HCTooltip>
-        </span>
-      );
-    } else if (step.lastRunStatus === "completed step " + step.stepNumber) {
-      return (
-        <span>
-          <HCTooltip text={RunToolTips.stepCompleted(stepEndTime)} id="success-tooltip" placement="bottom">
-            <span>
-              <i><FontAwesomeIcon aria-label="icon: check-circle" icon={faCheckCircle} className={styles.successfulRun} size="lg" data-testid={`check-circle-${step.stepName}`} /></i>
-            </span>
-          </HCTooltip>
-        </span>
-      );
-
-    } else if (step.lastRunStatus === "completed with errors step " + step.stepNumber) {
-      return (
-        <span>
-          <HCTooltip text={RunToolTips.stepCompletedWithErrors(stepEndTime)} id="complete-with-errors-tooltip" placement="bottom">
-            <ExclamationCircleFill aria-label="icon: exclamation-circle" className={styles.unSuccessfulRun} />
-          </HCTooltip>
-        </span>
-      );
-    } else {
-      return (
-        <span>
-          <HCTooltip text={RunToolTips.stepFailed(stepEndTime)} id="step-last-failed-tooltip" placement="bottom">
-            <XCircleFill data-icon="failed-circle" aria-label="icon: failed-circle" className={styles.unSuccessfulRun} />
-          </HCTooltip>
-        </span>
-      );
-    }
-  };
-
-  const resetSelectedFlow = (flowName) => {
-    let arrayObjectsStepDetails = [...selectedStepDetails];
-    const arrayObjectsStepDetailsAux = arrayObjectsStepDetails.filter((step) => {
-      return step.flowName === flowName;
-    });
-    setSelectedStepDetails(arrayObjectsStepDetailsAux);
-
-    let arrayObjectsLoadChecksSteps = [...arrayLoadChecksSteps];
-    for (let i = 0; i < arrayObjectsLoadChecksSteps?.length; i++) {
-      if (arrayObjectsLoadChecksSteps[i]?.flowName === flowName?.trim()) {
-        arrayObjectsLoadChecksSteps.splice(i, 1);
-      }
-    }
-    setArrayLoadChecksSteps(arrayObjectsLoadChecksSteps);
-
-    let arraySelectedStepOptions = {...selectedStepOptions};
-    for (let key in arraySelectedStepOptions) if (key.startsWith(flowName + "-")) delete arraySelectedStepOptions[key];
-    setSelectedStepOptions(arraySelectedStepOptions);
-
-
-
-  };
-  const reorderFlow = (id, flowName, direction: ReorderFlowOrderDirection) => {
-    let flowNum = flows.findIndex((flow) => flow.name === flowName);
-    let flowDesc = flows[flowNum]["description"];
-    const stepList = flows[flowNum]["steps"];
-    let newSteps = stepList;
-
-    if (direction === ReorderFlowOrderDirection.RIGHT) {
-      if (id <= stepList.length - 2) {
-        newSteps = [...stepList];
-        const oldLeftStep = newSteps[id];
-        const oldRightStep = newSteps[id + 1];
-        newSteps[id] = oldRightStep;
-        newSteps[id + 1] = oldLeftStep;
-      }
-    } else {
-      if (id >= 1) {
-        newSteps = [...stepList];
-        const oldLeftStep = newSteps[id - 1];
-        const oldRightStep = newSteps[id];
-        newSteps[id - 1] = oldRightStep;
-        newSteps[id] = oldLeftStep;
-      }
-    }
-
-    let _steps: string[] = [];
-    for (let i = 0; i < newSteps.length; i++) {
-      newSteps[i].stepNumber = String(i + 1);
-      _steps.push(newSteps[i].stepId);
-    }
-
-    resetSelectedFlow(flowName);
-    saveLocalStoragePreferences(true, true);
-
-
-    const reorderedList = [...newSteps];
-    onReorderFlow(flowNum, reorderedList);
-    updateFlow(flowName, flowDesc, _steps);
-
-  };
-
-
-  const getFlowWithJobInfo = async (flowNum) => {
-    let currentFlow = flows[flowNum];
-
-    if (currentFlow === undefined) {
-      return;
-    }
-
-    if (currentFlow["steps"].length > 0) {
-      try {
-        let response = await axios.get("/api/flows/" + currentFlow.name + "/latestJobInfo");
-        if (response.status === 200 && response.data) {
-          let currentFlowJobInfo = {};
-          currentFlowJobInfo[currentFlow["name"]] = response.data["steps"];
-          setLatestJobData(prevJobData => (
-            {...prevJobData, ...currentFlowJobInfo}
-          ));
-        }
-      } catch (error) {
-        console.error("Error getting latest job info ", error);
-      }
-    }
-  };
-
-  let panels;
+   */
+/*   let panels;
 
   if (flows) {
     panels = flows.map((flow, i) => {
@@ -1513,19 +1231,7 @@ const Flows: React.FC<Props> = ({
       );
     });
   }
-
-  //Update activeKeys on Collapse Panel interactions
-  const handlePanelInteraction = (key) => {
-    const tmpActiveKeys = [...activeKeys];
-    const index = tmpActiveKeys.indexOf(key);
-    index !== -1 ? tmpActiveKeys.splice(index, 1) : tmpActiveKeys.push(key);
-    /* Request to get latest job info for the flow will be made when someone opens the pane for the first time
-        or opens a new pane. Closing the pane shouldn't send any requests*/
-    if (!activeKeys || (tmpActiveKeys.length > activeKeys.length && tmpActiveKeys.length > 0)) {
-      getFlowWithJobInfo(tmpActiveKeys[tmpActiveKeys.length - 1]);
-    }
-    setActiveKeys([...tmpActiveKeys]);
-  };
+ */
 
   const createFlowKeyDownHandler = (event) => {
     if (event.key === "Enter") {
@@ -1533,14 +1239,6 @@ const Flows: React.FC<Props> = ({
       event.preventDefault();
     }
   };
-
-  const reorderFlowKeyDownHandler = (event, index, flowName, direction) => {
-    if (event.key === "Enter") {
-      reorderFlow(index, flowName, direction);
-      event.preventDefault();
-    }
-  };
-
   return (
     <div id="flows-container" className={styles.flowsContainer}>
       {canReadFlow || canWriteFlow ?
@@ -1578,7 +1276,52 @@ const Flows: React.FC<Props> = ({
                 </HCTooltip>
             }
           </div>
-          {panels}
+          {flows && flows.map((flow, i)=>{
+            <FlowPanel 
+              key={i}
+              ref={flowPanelsRef[flow.name]}
+              flow={flow}
+              flowRunning={flowRunning}
+              flows={flows}
+              flowsDeepCopy={flowsDeepCopy}
+              steps={steps}
+              selectedSteps={selectedStepDetails}
+              selectedStepOptions={selectedStepOptions}
+              runningStep={runningStep}
+              isStepRunning={isStepRunning}
+              latestJobData={latestJobData}
+              arrayLoadChecksSteps={arrayLoadChecksSteps}
+              canWriteFlow={canWriteFlow}
+              canUserStopFlow={canUserStopFlow}
+              hasOperatorRole={hasOperatorRole}
+              checkAll={checkAll}
+              getFlowWithJobInfo={getFlowWithJobInfo}
+              openFilePicker={openFilePicker}
+              handleRunSingleStep={handleRunSingleStep}
+              handleRunFlow={handleRunFlow}
+              handleStepAdd={handleStepAdd}
+              handleStepDelete={handleStepDelete}
+              handleFlowDelete={handleFlowDelete}
+              stopRun={stopRun}
+              reorderFlow={reorderFlow}
+              onCheckboxChange={onCheckboxChange}
+              getRootProps={getRootProps}
+              getInputProps={getInputProps}
+              showUploadError={showUploadError}
+              uploadError={uploadError}
+              setRunningFlow={setRunningFlow}
+              setRunningStep={setRunningStep}
+              setJobId={setJobId}
+              setShowUploadError={setShowUploadError}
+              setSingleIngest={setSingleIngest}
+              setOpenJobResponse={setOpenJobResponse}
+              setNewFlow={setNewFlow}
+              setFlowData={setFlowData}
+              setTitle={setTitle}
+              setActiveKeys={setActiveKeys}
+              activeKeys={activeKeys}
+            />
+          })}
           <NewFlowDialog
             newFlow={newFlow || openNewFlow}
             title={title}
@@ -1593,10 +1336,10 @@ const Flows: React.FC<Props> = ({
             newStepToFlowOptions={newStepToFlowOptions}
             setOpenNewFlow={setOpenNewFlow}
           />
-          {deleteConfirmation}
-          {deleteStepConfirmation}
-          {addStepConfirmation}
-          {addExistingStepConfirmation}
+          {deleteConfirmationModal(dialogVisible, flowName, onOk, onCancel)}
+          {deleteStepConfirmationModal(stepDialogVisible, stepName, stepNumber, flowName, onStepOk, onCancel)}
+          {addStepConfirmationModal(addStepDialogVisible, onAddStepOk, onCancel, flowName, stepName, stepType, isStepInFlow)}
+          {addExistingStepConfirmationModal(addExistingStepDialogVisible,stepName, flowName, onConfirmOk, onCancel)}
         </> :
         <div></div>
       }
