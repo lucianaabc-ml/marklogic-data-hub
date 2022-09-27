@@ -1,23 +1,23 @@
-import React, {useState, useContext, CSSProperties} from 'react';
-import { Accordion, ButtonGroup, Card, Dropdown, Modal } from "react-bootstrap";
+import React, {useState, useContext, CSSProperties} from "react";
+import {Accordion, ButtonGroup, Card, Dropdown} from "react-bootstrap";
 import styles from "./flows.module.scss";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {AuthoritiesContext} from "@util/authorities";
-import { PopoverRunSteps, RunToolTips, SecurityTooltips } from "@config/tooltips.config";
-import { HCCard, HCTooltip, HCButton, HCCheckbox } from "@components/common";
-import { faArrowAltCircleLeft, faArrowAltCircleRight, faTrashAlt } from "@fortawesome/free-regular-svg-icons"; import { ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, X, XCircleFill } from "react-bootstrap-icons";
-import { faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle } from "@fortawesome/free-solid-svg-icons";
-import { ReorderFlowOrderDirection, StepDefinitionTypeTitles } from './types';
-import { themeColors } from "@config/themes.config";
-import { Link, useLocation } from "react-router-dom";
+import {PopoverRunSteps, RunToolTips, SecurityTooltips} from "@config/tooltips.config";
+import {HCCard, HCTooltip, HCButton, HCCheckbox} from "@components/common";
+import {faArrowAltCircleLeft, faArrowAltCircleRight, faTrashAlt} from "@fortawesome/free-regular-svg-icons"; import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, X, XCircleFill} from "react-bootstrap-icons";
+import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
+import {ReorderFlowOrderDirection, StepDefinitionTypeTitles} from "./types";
+import {themeColors} from "@config/themes.config";
+import {Link} from "react-router-dom";
 
 import {dynamicSortDates} from "@util/conversionFunctions";
 
 import sourceFormatOptions from "@config/formats.config";
 
 interface Props {
-  key: string;
-  ref: React.RefObject<any>;
+  idx: string;
+  flowRef: React.RefObject<any>;
   flow: any;
   flows: any;
   flowsDeepCopy: any;
@@ -64,9 +64,9 @@ const FlowPanel: React.FC<Props> = ({
   flowsDeepCopy,
   flow,
   flows,
-  ref,
+  flowRef,
   steps,
-  key,
+  idx,
   checkAll,
   latestJobData,
   selectedSteps,
@@ -105,9 +105,9 @@ const FlowPanel: React.FC<Props> = ({
   setTitle
 }) => {
   const [currentTooltip, setCurrentTooltip] = useState("");
-    const [showLinks, setShowLinks] = useState("");
+  const [showLinks, setShowLinks] = useState("");
 
-  
+
   // For role-based privileges
   const authorityService = useContext(AuthoritiesContext);
   const authorityByStepType = {
@@ -117,11 +117,11 @@ const FlowPanel: React.FC<Props> = ({
     merging: authorityService.canReadMatchMerge(),
     custom: authorityService.canReadCustom()
   };
-  
+
   const handleMouseOver = (e, name) => {
     setShowLinks(name);
   };
-  
+
   //Custom CSS for source Format
   const sourceFormatStyle = (sourceFmt) => {
     let customStyles: CSSProperties;
@@ -151,7 +151,7 @@ const FlowPanel: React.FC<Props> = ({
     return customStyles;
   };
 
-  
+
   let titleTypeStep; let currentTitle = "";
   let mapTypeSteps = new Map([["mapping", "Mapping"], ["merging", "Merging"], ["custom", "Custom"], ["mastering", "Mastering"], ["ingestion", "Loading"]]);
   const handleTitleSteps = (stepType) => {
@@ -278,13 +278,13 @@ const FlowPanel: React.FC<Props> = ({
       getFlowWithJobInfo(tmpActiveKeys[tmpActiveKeys.length - 1]);
     }
     setActiveKeys([...tmpActiveKeys]);
-  }
+  };
 
   const OpenFlowJobStatus = (e, index, name) => {
     e.stopPropagation();
     e.preventDefault();
     //parse for latest job to display
-    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({ jobId: step.jobId, date: step.stepEndTime }));
+    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({jobId: step.jobId, date: step.stepEndTime}));
     let sortedJobs = completedJobsWithDates.sort(dynamicSortDates("date"));
     setJobId(sortedJobs[0].jobId);
     setOpenJobResponse(true);
@@ -293,7 +293,7 @@ const FlowPanel: React.FC<Props> = ({
   const OpenEditFlowDialog = (e, index) => {
     e.stopPropagation();
     setTitle("Edit Flow");
-    setFlowData(prevState => ({ ...prevState, ...flows[index] }));
+    setFlowData(prevState => ({...prevState, ...flows[index]}));
     setNewFlow(true);
   };
 
@@ -364,7 +364,7 @@ const FlowPanel: React.FC<Props> = ({
             <div className={styles.actions}>
               {hasOperatorRole ?
                 step.stepDefinitionType.toLowerCase() === "ingestion" ?
-                  <div {...getRootProps()} style={{ display: "inline-block" }}>
+                  <div {...getRootProps()} style={{display: "inline-block"}}>
                     <input {...getInputProps()} id="fileUpload" />
                     <div
                       className={styles.run}
@@ -430,7 +430,7 @@ const FlowPanel: React.FC<Props> = ({
               : null}
             <div className={sourceFormat ? styles.loadStepName : styles.name}>{step.stepName}</div>
             <div className={styles.cardLinks}
-              style={{ display: showLinks === viewStepId && step.stepId && authorityByStepType[stepDefinitionType] ? "block" : "none" }}
+              style={{display: showLinks === viewStepId && step.stepId && authorityByStepType[stepDefinitionType] ? "block" : "none"}}
               aria-label={viewStepId + "-cardlink"}
             >
               <Link id={"tiles-step-view-" + viewStepId}
@@ -649,20 +649,20 @@ const FlowPanel: React.FC<Props> = ({
   );
 
   return (
-    <Accordion className={"w-100"} flush key={key} id={flow.name} activeKey={activeKeys.includes(key) ? key : ""} defaultActiveKey={activeKeys.includes(key) ? key : ""}>
-      <Accordion.Item eventKey={key}>
+    <Accordion className={"w-100"} flush key={idx} id={flow.name} activeKey={activeKeys.includes(idx) ? idx : ""} defaultActiveKey={activeKeys.includes(idx) ? idx : ""}>
+      <Accordion.Item eventKey={idx}>
         <Card>
           <Card.Header className={"p-0 pe-3 d-flex bg-white"}>
-            <Accordion.Button data-testid={`accordion-${flow.name}`} onClick={() => handlePanelInteraction(key)}>
+            <Accordion.Button data-testid={`accordion-${flow.name}`} onClick={() => handlePanelInteraction(idx)}>
               <span id={"flow-header-" + flow.name} className={styles.flowHeader}>
                 <HCTooltip text={canWriteFlow ? RunToolTips.flowEdit : RunToolTips.flowDetails} id="open-edit-tooltip" placement="bottom">
-                  <span className={styles.flowName} onClick={(e) => OpenEditFlowDialog(e, key)}>
+                  <span className={styles.flowName} onClick={(e) => OpenEditFlowDialog(e, idx)}>
                     {flow.name}
                   </span>
                 </HCTooltip>
                 {latestJobData && latestJobData[flow.name] && latestJobData[flow.name].find(step => step.jobId) ?
                   <HCTooltip text={RunToolTips.flowName} placement="bottom" id="">
-                    <span onClick={(e) => OpenFlowJobStatus(e, key, flow.name)} className={styles.infoIcon} data-testid={`${flow.name}-flow-status`}>
+                    <span onClick={(e) => OpenFlowJobStatus(e, idx, flow.name)} className={styles.infoIcon} data-testid={`${flow.name}-flow-status`}>
                       <FontAwesomeIcon icon={faInfoCircle} size="1x" aria-label="icon: info-circle" className={styles.flowStatusIcon} />
                     </span>
                   </HCTooltip>
@@ -670,16 +670,16 @@ const FlowPanel: React.FC<Props> = ({
                 }
               </span>
             </Accordion.Button>
-            {panelActions(flow.name, key)}
+            {panelActions(flow.name, idx)}
           </Card.Header>
-          <Accordion.Body className={styles.panelContent} ref={ref}>
+          <Accordion.Body className={styles.panelContent} ref={flowRef}>
             {cards}
           </Accordion.Body>
         </Card>
       </Accordion.Item>
     </Accordion>
   );
-}
+};
 
 
 export default FlowPanel;
