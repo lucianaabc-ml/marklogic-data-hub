@@ -5,16 +5,16 @@ export enum ReorderFlowOrderDirection {
 }
 
 export const StepDefinitionTypeTitles = {
-    "INGESTION": "Loading",
-    "ingestion": "Loading",
-    "MAPPING": "Mapping",
-    "mapping": "Mapping",
-    "MASTERING": "Mastering",
-    "mastering": "Mastering",
-    "MATCHING": "Matching",
-    "matching": "Matching",
-    "MERGING": "Merging",
-    "merging": "Merging",
-    "CUSTOM": "Custom",
-    "custom": "Custom"
+  "INGESTION": "Loading",
+  "ingestion": "Loading",
+  "MAPPING": "Mapping",
+  "mapping": "Mapping",
+  "MASTERING": "Mastering",
+  "mastering": "Mastering",
+  "MATCHING": "Matching",
+  "matching": "Matching",
+  "MERGING": "Merging",
+  "merging": "Merging",
+  "CUSTOM": "Custom",
+  "custom": "Custom"
 };

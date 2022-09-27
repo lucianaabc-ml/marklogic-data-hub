@@ -3,8 +3,8 @@ import "./flows.scss";
 import * as _ from "lodash";
 
 import {HCButton, HCTooltip} from "@components/common";
-import { useLocation} from "react-router-dom";
-import { SecurityTooltips} from "@config/tooltips.config";
+import {useLocation} from "react-router-dom";
+import {SecurityTooltips} from "@config/tooltips.config";
 import React, {createRef, useEffect, useState} from "react";
 import {getViewSettings, setViewSettings} from "@util/user-context";
 import {getUserPreferences, updateUserPreferences} from "../../../src/services//user-preferences";
@@ -13,7 +13,7 @@ import NewFlowDialog from "./new-flow-dialog/new-flow-dialog";
 import axios from "axios";
 import styles from "./flows.module.scss";
 import {useDropzone} from "react-dropzone";
-import {deleteConfirmationModal, deleteStepConfirmationModal, addStepConfirmationModal, addExistingStepConfirmationModal} from "./confirmation-modals"
+import {deleteConfirmationModal, deleteStepConfirmationModal, addStepConfirmationModal, addExistingStepConfirmationModal} from "./confirmation-modals";
 import FlowPanel from "./flowPanel";
 
 enum ReorderFlowOrderDirection {
@@ -47,21 +47,6 @@ export interface Props {
   canUserStopFlow: boolean;
 }
 
-const StepDefinitionTypeTitles = {
-  "INGESTION": "Loading",
-  "ingestion": "Loading",
-  "MAPPING": "Mapping",
-  "mapping": "Mapping",
-  "MASTERING": "Mastering",
-  "mastering": "Mastering",
-  "MATCHING": "Matching",
-  "matching": "Matching",
-  "MERGING": "Merging",
-  "merging": "Merging",
-  "CUSTOM": "Custom",
-  "custom": "Custom"
-};
-
 const Flows: React.FC<Props> = ({
   flows,
   steps,
@@ -87,7 +72,7 @@ const Flows: React.FC<Props> = ({
   isStepRunning,
   canUserStopFlow,
 }) => {
-  
+
   // Setup for file upload
   const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
     noClick: true,
@@ -726,7 +711,7 @@ const Flows: React.FC<Props> = ({
     setShowUploadError(false);
     await runStep(flowName, step);
   };
-  
+
   const customRequest = async () => {
     const filenames = fileList.map(({name}) => name);
     if (filenames.length) {
@@ -849,390 +834,6 @@ const Flows: React.FC<Props> = ({
     }
   };
 
-/*   const showStopButton = (flowName: string): boolean => {
-    if (!flowRunning) return false;
-    return (isStepRunning && flowRunning.name === flowName);
-  }; */
-/*   const flowMenu = (flowName) => {
-    return (
-      <>
-        <Dropdown.Header className="py-0 fs-6 mb-2 text-dark">{PopoverRunSteps.selectStepTitle}</Dropdown.Header>
-        <hr />
-        <div className={styles.divCheckAll}>
-          <HCCheckbox
-            id={"checkAll"}
-            value={checkAll[flowName]}
-            checked={checkAll[flowName]}
-            dataTestId={"select-all-toggle"}
-            handleClick={(event) => onCheckboxChange(event, "", "", "", flowName, "", "", true)}
-            label={checkAll[flowName] ? "Deselect All" : "Select All"}
-          >
-          </HCCheckbox>
-        </div>
-        {flowsDeepCopy.filter((flow) => flow.name === flowName)[0]?.steps?.sort((a, b) => a.stepDefinitionType?.toLowerCase()?.localeCompare(b.stepDefinitionType?.toLowerCase())).map((step, index) => {
-          return (
-            <div key={index}>
-              <div className={styles.titleTypeStep}>{handleTitleSteps(step?.stepDefinitionType?.toLowerCase())}</div>
-              <div key={index} className={styles.divItem}>
-                <HCTooltip text={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step, flowName) ? RunToolTips.loadStepRunFlow : "" : ""} placement="left" id={`tooltip`}>
-                  <div className="divCheckBoxStep">
-                    <HCCheckbox
-                      tooltip={step.stepName}
-                      placementTooltip={"top"}
-                      label={countLetters(step.stepName) ? step.stepName : undefined}
-                      id={step.stepName}
-                      value={step.stepName}
-                      handleClick={(event) => onCheckboxChange(event, step.stepName, step.stepNumber, step.stepDefinitionType, flowName, step.stepId, step.sourceFormat)}
-                      checked={!!selectedStepOptions[flowName + "-" + step.stepName + "-" + step.stepDefinitionType.toLowerCase()]}
-                      disabled={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step, flowName) : false}
-                      removeMargin={true}
-                    >{step.stepName}
-                    </HCCheckbox></div></HCTooltip>
-              </div>
-            </div>
-          );
-        })}
-        <Dropdown.Header className="py-0 fs-6 mt-2 text-danger" style={{whiteSpace: "pre-line"}} id="errorMessageEmptySteps">{controlStepSelected(flowName) ? "" : PopoverRunSteps.selectOneStepError}</Dropdown.Header>
-      </>
-    );
-  };
-  */
-/*  const stepMenu = (flowName, i) => (
-    <Dropdown align="end" >
-      <Dropdown.Toggle data-testid={`addStep-${flowName}`} aria-label={`addStep-${flowName}`} disabled={!canWriteFlow} variant="outline-light" className={canWriteFlow ? styles.stepMenu : styles.stepMenuDisabled}>
-        {
-          canWriteFlow ?
-            <>Add Step<ChevronDown className="ms-2" /> </>
-            :
-            <HCTooltip text={SecurityTooltips.missingPermission} id="add-step-disabled-tooltip" placement="bottom">
-              <span aria-label={"addStepDisabled-" + i}>Add Step<ChevronDown className="ms-2" /> </span>
-            </HCTooltip>
-        }
-      </Dropdown.Toggle>
-      <Dropdown.Menu>
-        <Dropdown.Header className="py-0 px-2 fs-6">Loading</Dropdown.Header>
-        {steps && steps["ingestionSteps"] && steps["ingestionSteps"].length > 0 ? steps["ingestionSteps"].map((elem, index) => (
-          <Dropdown.Item key={index} aria-label={`${elem.name}-to-flow`}>
-            <div
-              onClick={() => { handleStepAdd(elem.name, flowName, "ingestion"); }}
-            >{elem.name}</div>
-          </Dropdown.Item>
-        )) : null}
-
-        <Dropdown.Header className="py-0 px-2 fs-6">Mapping</Dropdown.Header>
-        {steps && steps["mappingSteps"] && steps["mappingSteps"].length > 0 ? steps["mappingSteps"].map((elem, index) => (
-          <Dropdown.Item key={index} aria-label={`${elem.name}-to-flow`}>
-            <div
-              onClick={() => { handleStepAdd(elem.name, flowName, "mapping"); }}
-            >{elem.name}</div>
-          </Dropdown.Item>
-        )) : null}
-
-        <Dropdown.Header className="py-0 px-2 fs-6">Matching</Dropdown.Header>
-        {steps && steps["matchingSteps"] && steps["matchingSteps"].length > 0 ? steps["matchingSteps"].map((elem, index) => (
-          <Dropdown.Item key={index} aria-label={`${elem.name}-to-flow`}>
-            <div
-              onClick={() => { handleStepAdd(elem.name, flowName, "matching"); }}
-            >{elem.name}</div>
-          </Dropdown.Item>
-        )) : null}
-
-        <Dropdown.Header className="py-0 px-2 fs-6">Merging</Dropdown.Header>
-        {steps && steps["mergingSteps"] && steps["mergingSteps"].length > 0 ? steps["mergingSteps"].map((elem, index) => (
-          <Dropdown.Item key={index} aria-label={`${elem.name}-to-flow`}>
-            <div
-              onClick={() => { handleStepAdd(elem.name, flowName, "merging"); }}
-            >{elem.name}</div>
-          </Dropdown.Item>
-        )) : null}
-
-        <Dropdown.Header className="py-0 px-2 fs-6">Mastering</Dropdown.Header>
-        {steps && steps["masteringSteps"] && steps["masteringSteps"].length > 0 ? steps["masteringSteps"].map((elem, index) => (
-          <Dropdown.Item key={index} aria-label={`${elem.name}-to-flow`}>
-            <div
-              onClick={() => { handleStepAdd(elem.name, flowName, "mastering"); }}
-            >{elem.name}</div>
-          </Dropdown.Item>
-        )) : null}
-
-        <Dropdown.Header className="py-0 px-2 fs-6">Custom</Dropdown.Header>
-        {steps && steps["customSteps"] && steps["customSteps"].length > 0 ? steps["customSteps"].map((elem, index) => (
-          <Dropdown.Item key={index} aria-label={`${elem.name}-to-flow`}>
-            <div
-              onClick={() => { handleStepAdd(elem.name, flowName, "custom"); }}
-            >{elem.name}</div>
-          </Dropdown.Item>
-        )) : null}
-      </Dropdown.Menu>
-    </Dropdown>
-  );
-*/
-/*  const panelActions = (name, i) => (
-    <div
-      className={styles.panelActionsContainer}
-      id="panelActions"
-      onClick={event => {
-        event.stopPropagation(); // Do not trigger collapse
-        event.preventDefault();
-      }}
-    >
-      {showStopButton(name) && (<HCTooltip text={canUserStopFlow ? RunToolTips.stopRun : RunToolTips.stopRunMissingPermission} id="stop-run" placement="top">
-        <span>
-          <HCButton
-            variant="outline-light"
-            className={styles.stopFlow}
-            key={`stepsDropdownButton-${name}`}
-            data-testid={`stopFlow-${name}`}
-            id={`stopFlow-${name}`}
-            size="sm"
-            onClick={() => { stopRun(); }}
-            disabled={!canUserStopFlow}
-          >
-            <FontAwesomeIcon icon={faStopCircle} size="1x" aria-label="icon: info-circle" className={canUserStopFlow ? styles.stopIcon : styles.stopIconDisabled} />
-            Stop Flow
-          </HCButton>
-        </span>
-      </HCTooltip>)}
-      <span id="stepsDropdown" className={styles.hoverColor} onMouseLeave={(e) => { setCurrentTooltip(""); }}>
-        <Dropdown as={ButtonGroup}>
-          <HCTooltip show={currentTooltip === name} text={isFlowEmpty(name) ? RunToolTips.runEmptyFlow : !controlStepSelected(name) ? RunToolTips.selectAStep : ""} placement="top" id={`run-flow-tooltip`}>
-            <span onMouseEnter={(e) => { !controlStepSelected(name) || isFlowEmpty(name) ? setCurrentTooltip(name) : void 0; }} onMouseLeave={(e) => { !isFlowEmpty(name) ? setCurrentTooltip("") : void 0; }} id={`${name}`}>
-              <HCButton
-                variant="transparent"
-                className={styles.runFlow}
-                key={`stepsDropdownButton-${name}`}
-                data-testid={`runFlow-${name}`}
-                id={`runFlow-${name}`}
-                size="sm"
-                onClick={() => handleRunFlow(i, name)}
-                disabled={!controlStepSelected(name) || flowsDeepCopy.filter((flow) => flow.name === name)[0]?.steps?.length < 1}
-              >
-                <><PlayCircleFill className={styles.runIcon} /> Run Flow </>
-              </HCButton>
-            </span>
-          </HCTooltip>
-          <Dropdown.Toggle split variant="transparent" className={styles.runIconToggle} disabled={isFlowEmpty(name) ? true : false}>
-            <GearFill className={styles.runIcon} role="step-settings button" aria-label={`stepSettings-${name}`} />
-          </Dropdown.Toggle>
-          <Dropdown.Menu className={styles.dropdownMenu}>
-            {flowMenu(name)}
-          </Dropdown.Menu>
-        </Dropdown>
-      </span>
-      {stepMenu(name, i)}
-      <span className={styles.deleteFlow}>
-        {canWriteFlow ?
-          <HCTooltip text="Delete Flow" id="disabled-trash-tooltip" placement="bottom">
-            <i aria-label={`deleteFlow-${name}`} className={"d-flex align-items-center"}>
-              <FontAwesomeIcon
-                icon={faTrashAlt}
-                onClick={() => { handleFlowDelete(name); }}
-                data-testid={`deleteFlow-${name}`}
-                className={styles.deleteIcon}
-                size="lg" />
-            </i>
-          </HCTooltip>
-          :
-          <HCTooltip text={"Delete Flow: " + SecurityTooltips.missingPermission} id="trash-tooltip" placement="bottom">
-            <i aria-label={`deleteFlowDisabled-${name}`} className={"d-flex align-items-center"}>
-              <FontAwesomeIcon
-                icon={faTrashAlt}
-                data-testid={`deleteFlow-${name}`}
-                className={styles.disabledDeleteIcon}
-                size="lg" />
-            </i>
-          </HCTooltip>}
-      </span>
-    </div>
-  );
-*/
-/*  const flowHeader = (name, index) => (
-    <span id={"flow-header-" + name} className={styles.flowHeader}>
-      <HCTooltip text={canWriteFlow ? RunToolTips.flowEdit : RunToolTips.flowDetails} id="open-edit-tooltip" placement="bottom">
-        <span className={styles.flowName} onClick={(e) => OpenEditFlowDialog(e, index)}>
-          {name}
-        </span>
-      </HCTooltip>
-      {latestJobData && latestJobData[name] && latestJobData[name].find(step => step.jobId) ?
-        <HCTooltip text={RunToolTips.flowName} placement="bottom" id="">
-          <span onClick={(e) => OpenFlowJobStatus(e, index, name)} className={styles.infoIcon} data-testid={`${name}-flow-status`}>
-            <FontAwesomeIcon icon={faInfoCircle} size="1x" aria-label="icon: info-circle" className={styles.flowStatusIcon} />
-          </span>
-        </HCTooltip>
-        : ""
-      }
-    </span>
-  );
-   */
-/*   let panels;
-
-  if (flows) {
-    panels = flows.map((flow, i) => {
-      let flowName = flow.name;
-      let cards = flow.steps.map((step, index) => {
-        let sourceFormat = step.sourceFormat;
-        let stepNumber = step.stepNumber;
-        let viewStepId = `${flowName}-${stepNumber}`;
-        let stepDefinitionType = step.stepDefinitionType ? step.stepDefinitionType.toLowerCase() : "";
-        let stepDefinitionTypeTitle = StepDefinitionTypeTitles[stepDefinitionType];
-        let stepWithJobDetail = latestJobData && latestJobData[flowName] && latestJobData[flowName] ? latestJobData[flowName].find(el => el.stepId === step.stepId) : null;
-        return (
-          <div key={viewStepId} id="flowSettings">
-            <HCCard
-              className={styles.cardStyle}
-              title={StepDefToTitle(step.stepDefinitionType)}
-              actions={[
-                <div className={styles.reorder}>
-                  {index !== 0 && canWriteFlow &&
-                    <div className={styles.reorderLeft}>
-                      <HCTooltip text={RunToolTips.moveLeft} id="move-left-tooltip" placement="bottom">
-                        <i>
-                          <FontAwesomeIcon
-                            aria-label={`leftArrow-${step.stepName}`}
-                            icon={faArrowAltCircleLeft}
-                            className={styles.reorderFlowLeft}
-                            role="button"
-                            onClick={() => reorderFlow(index, flowName, ReorderFlowOrderDirection.LEFT)}
-                            onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flowName, ReorderFlowOrderDirection.LEFT)}
-                            tabIndex={0} />
-                        </i>
-                      </HCTooltip>
-                    </div>
-                  }
-                  <div className={styles.reorderRight}>
-                    <div className={styles.stepResponse}>
-                      {stepWithJobDetail ? lastRunResponse(stepWithJobDetail, flowName) : ""}
-                    </div>
-                    {index < flow.steps.length - 1 && canWriteFlow &&
-                      <HCTooltip aria-label="icon: right" text="Move right" id="move-right-tooltip" placement="bottom" >
-                        <i>
-                          <FontAwesomeIcon
-                            aria-label={`rightArrow-${step.stepName}`}
-                            icon={faArrowAltCircleRight}
-                            className={styles.reorderFlowRight}
-                            role="button"
-                            onClick={() => reorderFlow(index, flowName, ReorderFlowOrderDirection.RIGHT)}
-                            onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flowName, ReorderFlowOrderDirection.RIGHT)}
-                            tabIndex={0} />
-                        </i>
-                      </HCTooltip>
-                    }
-                  </div>
-                </div>
-              ]}
-              titleExtra={
-                <div className={styles.actions}>
-                  {hasOperatorRole ?
-                    step.stepDefinitionType.toLowerCase() === "ingestion" ?
-                      <div {...getRootProps()} style={{display: "inline-block"}}>
-                        <input {...getInputProps()} id="fileUpload" />
-                        <div
-                          className={styles.run}
-                          aria-label={`runStep-${step.stepName}`}
-                          data-testid={"runStep-" + stepNumber}
-                          onClick={() => {
-                            setShowUploadError(false);
-                            setSingleIngest(true);
-                            setRunningStep(step);
-                            setRunningFlow(flowName);
-                            openFilePicker();
-                          }}
-                        >
-                          <HCTooltip text={RunToolTips.ingestionStep} id="run-ingestion-tooltip" placement="bottom">
-                            <PlayCircleFill aria-label="icon: play-circle" color={themeColors.defaults.questionCircle} size={20} />
-                          </HCTooltip>
-                        </div>
-                      </div>
-                      :
-                      <div
-                        className={styles.run}
-                        onClick={() => {
-                          handleRunSingleStep(flowName, step);
-                        }}
-                        aria-label={`runStep-${step.stepName}`}
-                        data-testid={"runStep-" + stepNumber}
-                      >
-                        <HCTooltip text={RunToolTips.otherSteps} id="run-tooltip" placement="bottom">
-                          <PlayCircleFill aria-label="icon: play-circle" color={themeColors.defaults.questionCircle} size={20} />
-                        </HCTooltip>
-                      </div>
-                    :
-                    <div
-                      className={styles.disabledRun}
-                      onClick={(event) => { event.stopPropagation(); event.preventDefault(); }}
-                      aria-label={"runStepDisabled-" + step.stepName}
-                      data-testid={"runStepDisabled-" + stepNumber}
-                    >
-                      <PlayCircleFill size={20} />
-                    </div>
-                  }
-                  {canWriteFlow ?
-                    <HCTooltip text={RunToolTips.removeStep} id="delete-step-tooltip" placement="bottom">
-                      <div className={styles.delete} aria-label={`deleteStep-${step.stepName}`} onClick={() => handleStepDelete(flowName, step)}>
-                        <X aria-label="icon: close" color={themeColors.primary} size={27} />
-                      </div>
-                    </HCTooltip> :
-                    <HCTooltip text={RunToolTips.removeStep} id="delete-step-tooltip" placement="bottom">
-                      <div className={styles.disabledDelete} aria-label={`deleteStepDisabled-${step.stepName}`} onClick={(event) => { event.stopPropagation(); event.preventDefault(); }}>
-                        <X aria-label="icon: close" color={themeColors.primary} size={27} />
-                      </div>
-                    </HCTooltip>
-                  }
-                </div>
-              }
-              footerClassName={styles.cardFooter}
-            >
-              <div aria-label={viewStepId + "-content"} className={styles.cardContent}
-                onMouseOver={(e) => handleMouseOver(e, viewStepId)}
-                onMouseLeave={(e) => setShowLinks("")} >
-                {sourceFormat ?
-                  <div className={styles.format} style={sourceFormatStyle(sourceFormat)} >{sourceFormatOptions[sourceFormat].label}</div>
-                  : null}
-                <div className={sourceFormat ? styles.loadStepName : styles.name}>{step.stepName}</div>
-                <div className={styles.cardLinks}
-                  style={{display: showLinks === viewStepId && step.stepId && authorityByStepType[stepDefinitionType] ? "block" : "none"}}
-                  aria-label={viewStepId + "-cardlink"}
-                >
-                  <Link id={"tiles-step-view-" + viewStepId}
-                    to={{
-                      pathname: `/tiles/${stepDefinitionType.toLowerCase() === "ingestion" ? "load" : "curate"}`,
-                      state: {
-                        stepToView: step.stepId,
-                        stepDefinitionType: stepDefinitionType,
-                        targetEntityType: step.targetEntityType
-                      }
-                    }}
-                  >
-                    <div className={styles.cardLink} data-testid={`${viewStepId}-viewStep`}>View {stepDefinitionTypeTitle} steps</div>
-                  </Link>
-                </div>
-              </div>
-              <div className={styles.uploadError}>
-                {showUploadError && flowName === runningFlow && stepNumber === runningStep.stepNumber ? uploadError : ""}
-              </div>
-            </HCCard>
-          </div>
-        );
-      });
-      return (
-        <Accordion className={"w-100"} flush key={i} id={flowName} activeKey={activeKeys.includes(i) ? i : ""} defaultActiveKey={activeKeys.includes(i) ? i : ""}>
-          <Accordion.Item eventKey={i}>
-            <Card>
-              <Card.Header className={"p-0 pe-3 d-flex bg-white"}>
-                <Accordion.Button data-testid={`accordion-${flowName}`} onClick={() => handlePanelInteraction(i)}>{flowHeader(flowName, i)}</Accordion.Button>
-                {panelActions(flowName, i)}
-              </Card.Header>
-              <Accordion.Body className={styles.panelContent} ref={flowPanels[flowName]}>
-                {cards}
-              </Accordion.Body>
-            </Card>
-          </Accordion.Item>
-        </Accordion>
-      );
-    });
-  }
- */
-
   const createFlowKeyDownHandler = (event) => {
     if (event.key === "Enter") {
       OpenAddNewDialog();
@@ -1276,10 +877,10 @@ const Flows: React.FC<Props> = ({
                 </HCTooltip>
             }
           </div>
-          {flows && flows.map((flow, i)=>{
-            <FlowPanel 
-              key={i}
-              ref={flowPanelsRef[flow.name]}
+          {flows && flows.map((flow, i) => {
+            return (<FlowPanel
+              idx={i}
+              flowRef={flowPanelsRef[flow.name]}
               flow={flow}
               flowRunning={flowRunning}
               flows={flows}
@@ -1320,7 +921,7 @@ const Flows: React.FC<Props> = ({
               setTitle={setTitle}
               setActiveKeys={setActiveKeys}
               activeKeys={activeKeys}
-            />
+            />);
           })}
           <NewFlowDialog
             newFlow={newFlow || openNewFlow}
@@ -1339,7 +940,7 @@ const Flows: React.FC<Props> = ({
           {deleteConfirmationModal(dialogVisible, flowName, onOk, onCancel)}
           {deleteStepConfirmationModal(stepDialogVisible, stepName, stepNumber, flowName, onStepOk, onCancel)}
           {addStepConfirmationModal(addStepDialogVisible, onAddStepOk, onCancel, flowName, stepName, stepType, isStepInFlow)}
-          {addExistingStepConfirmationModal(addExistingStepDialogVisible,stepName, flowName, onConfirmOk, onCancel)}
+          {addExistingStepConfirmationModal(addExistingStepDialogVisible, stepName, flowName, onConfirmOk, onCancel)}
         </> :
         <div></div>
       }
