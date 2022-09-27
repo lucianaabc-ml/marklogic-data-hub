@@ -6,7 +6,7 @@ import {useLocation} from "react-router-dom";
 import {SecurityTooltips} from "@config/tooltips.config";
 import React, {createRef, useEffect, useState} from "react";
 import {getViewSettings, setViewSettings} from "@util/user-context";
-import {getUserPreferences, updateUserPreferences} from "../../../src/services//user-preferences";
+// import {getUserPreferences, updateUserPreferences} from "../../../src/services//user-preferences";
 import {Flow, Step} from "../../types/run-types";
 import NewFlowDialog from "./new-flow-dialog/new-flow-dialog";
 import axios from "axios";
@@ -165,13 +165,13 @@ const Flows: React.FC<Props> = ({
         })
       ));
 
-      //Getting local storage in the load of the page if it exists
+    /*   //Getting local storage in the load of the page if it exists
       if (getUserPreferencesLS() && getUserPreferencesLS()?.loadSelectedStepsUser) {
         if (getUserPreferencesLS()?.selectedStepsDataUser && Object.keys(getUserPreferencesLS().selectedStepsDataUser?.selectedStepOptions).length !== 0) {
           getLocalStorageDataUser();
 
         }
-      }
+      } */
     }
   }, [flows]);
 
@@ -297,7 +297,7 @@ const Flows: React.FC<Props> = ({
   useEffect(() => {
     //When Refreshing or leaving the page, save the flag to get the local storage
     return () => {
-      saveLocalStoragePreferences(true);
+      //saveLocalStoragePreferences(true);
     };
   }, []);
 
@@ -389,7 +389,7 @@ const Flows: React.FC<Props> = ({
 
     resetSelectedFlow(flowName);
     setStepDialogVisible(false);
-    saveLocalStoragePreferences(true, true);
+    //saveLocalStoragePreferences(true, true);
     deleteStep(flowName, stepNumber);
   };
 
@@ -551,6 +551,7 @@ const Flows: React.FC<Props> = ({
       if (originRender) event.stopPropagation();
     }
   };
+  /* Commenting all local storage settings, to be refactored and readded
 
   const getLocalStorageDataUser = () => {
 
@@ -589,6 +590,8 @@ const Flows: React.FC<Props> = ({
     return oldOptions;
   };
 
+
+
   const saveLocalStoragePreferences = (value: boolean, saveSelectedStepsDataUser?: boolean) => {
 
     const sessionUser = localStorage.getItem("dataHubUser");
@@ -614,7 +617,7 @@ const Flows: React.FC<Props> = ({
       }
       updateUserPreferences(sessionUser ?? "", newOptions);
     }
-  };
+  }; */
 
   let flagOneLoadSelected = true, flowNameCheckAux = "";
   const handleArrayLoadChecksSteps = (flowNameCheck, stepName, stepNumber, stepDefinitionType, origin?) => {
@@ -675,7 +678,7 @@ const Flows: React.FC<Props> = ({
 
   const handleRunFlow = async (index, name) => {
     //setRunFlowClicked(true);
-    saveLocalStoragePreferences(false, true);
+    //saveLocalStoragePreferences(false, true);
     const setKey = async () => {
       await setActiveKeys(`${index}`);
     };
@@ -807,7 +810,7 @@ const Flows: React.FC<Props> = ({
     }
 
     resetSelectedFlow(flowName);
-    saveLocalStoragePreferences(true, true);
+    //saveLocalStoragePreferences(true, true);
 
 
     const reorderedList = [...newSteps];
