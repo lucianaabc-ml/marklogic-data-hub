@@ -14,7 +14,7 @@ import axios from "axios";
 import styles from "./flows.module.scss";
 import {useDropzone} from "react-dropzone";
 import {deleteConfirmationModal, deleteStepConfirmationModal, addStepConfirmationModal, addExistingStepConfirmationModal} from "./confirmation-modals";
-import FlowPanel from "./flowPanel";
+import FlowPanel from "./flow-panel/flowPanel";
 
 enum ReorderFlowOrderDirection {
   LEFT = "left",
@@ -115,7 +115,6 @@ const Flows: React.FC<Props> = ({
   const [arrayLoadChecksSteps, setArrayLoadChecksSteps] = useState<any>([{flowName: "", stepNumber: -1}]);
   const [selectedStepDetails, setSelectedStepDetails] = useState<any>([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
   const [flowsDeepCopy, setFlowsDeepCopy] = useState<any>([]);
-  //const [runFlowClicked, setRunFlowClicked] = useState(false);
   const [checkAll, setCheckAll] = useState({});
   const location = useLocation();
 
@@ -419,7 +418,6 @@ const Flows: React.FC<Props> = ({
     if (flow) result = flow["steps"].findIndex(s => s.stepName === stepName) > -1;
     return result;
   };
-
 
   const openFilePicker = () => {
     open();
@@ -748,7 +746,6 @@ const Flows: React.FC<Props> = ({
     }
   };
 
-
   const resetSelectedFlow = (flowName) => {
     let arrayObjectsStepDetails = [...selectedStepDetails];
     const arrayObjectsStepDetailsAux = arrayObjectsStepDetails.filter((step) => {
@@ -771,6 +768,7 @@ const Flows: React.FC<Props> = ({
 
 
   };
+
   const reorderFlow = (id, flowName, direction: ReorderFlowOrderDirection) => {
     let flowNum = flows.findIndex((flow) => flow.name === flowName);
     let flowDesc = flows[flowNum]["description"];
@@ -879,6 +877,7 @@ const Flows: React.FC<Props> = ({
           </div>
           {flows && flows.map((flow, i) => {
             return (<FlowPanel
+              key={i}
               idx={i}
               flowRef={flowPanelsRef[flow.name]}
               flow={flow}

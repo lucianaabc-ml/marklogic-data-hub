@@ -1,15 +1,14 @@
-import React, {useState, useContext, CSSProperties} from "react";
+import React, {useState} from "react";
 import {Accordion, ButtonGroup, Card, Dropdown} from "react-bootstrap";
-import styles from "./flows.module.scss";
+import styles from "../flows.module.scss";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {AuthoritiesContext} from "@util/authorities";
 import {PopoverRunSteps, RunToolTips, SecurityTooltips} from "@config/tooltips.config";
-import {HCCard, HCTooltip, HCButton, HCCheckbox} from "@components/common";
-import {faArrowAltCircleLeft, faArrowAltCircleRight, faTrashAlt} from "@fortawesome/free-regular-svg-icons"; import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, X, XCircleFill} from "react-bootstrap-icons";
+import {HCTooltip, HCButton, HCCheckbox} from "@components/common";
+import {faTrashAlt} from "@fortawesome/free-regular-svg-icons";
+import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, XCircleFill} from "react-bootstrap-icons";
 import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
-import {ReorderFlowOrderDirection, StepDefinitionTypeTitles} from "./types";
-import {themeColors} from "@config/themes.config";
-import {Link} from "react-router-dom";
+import {ReorderFlowOrderDirection} from "../types";
+import FlowCard from "./flowCard";
 
 import {dynamicSortDates} from "@util/conversionFunctions";
 
@@ -74,19 +73,23 @@ const FlowPanel: React.FC<Props> = ({
   openFilePicker,
   setRunningStep,
   setRunningFlow,
-  handleStepAdd,
   handleStepDelete,
-  handleRunFlow,
-  handleFlowDelete,
   handleRunSingleStep,
-  stopRun,
-  onCheckboxChange,
+  runningStep,
+  hasOperatorRole,
+  getInputProps,
+  getRootProps,
+  setShowUploadError,
+  setSingleIngest,
   uploadError,
   showUploadError,
+  handleStepAdd,
+  handleRunFlow,
+  handleFlowDelete,
+  stopRun,
+  onCheckboxChange,
   isStepRunning,
-  runningStep,
   flowRunning,
-  hasOperatorRole,
   reorderFlow,
   canWriteFlow,
   canUserStopFlow,
@@ -95,10 +98,6 @@ const FlowPanel: React.FC<Props> = ({
   setJobId,
   getFlowWithJobInfo,
   arrayLoadChecksSteps,
-  getInputProps,
-  getRootProps,
-  setShowUploadError,
-  setSingleIngest,
   setOpenJobResponse,
   setNewFlow,
   setFlowData,
@@ -106,51 +105,6 @@ const FlowPanel: React.FC<Props> = ({
 }) => {
   const [currentTooltip, setCurrentTooltip] = useState("");
   const [showLinks, setShowLinks] = useState("");
-
-
-  // For role-based privileges
-  const authorityService = useContext(AuthoritiesContext);
-  const authorityByStepType = {
-    ingestion: authorityService.canReadLoad(),
-    mapping: authorityService.canReadMapping(),
-    matching: authorityService.canReadMatchMerge(),
-    merging: authorityService.canReadMatchMerge(),
-    custom: authorityService.canReadCustom()
-  };
-
-  const handleMouseOver = (e, name) => {
-    setShowLinks(name);
-  };
-
-  //Custom CSS for source Format
-  const sourceFormatStyle = (sourceFmt) => {
-    let customStyles: CSSProperties;
-    if (!sourceFmt) {
-      customStyles = {
-        float: "left",
-        backgroundColor: "#fff",
-        color: "#fff",
-        padding: "5px"
-      };
-    } else {
-      customStyles = {
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "35px",
-        width: "35px",
-        lineHeight: "35px",
-        backgroundColor: sourceFormatOptions[sourceFmt].color,
-        fontSize: sourceFmt === "json" ? "12px" : "13px",
-        borderRadius: "50%",
-        textAlign: "center",
-        color: "#ffffff",
-        verticalAlign: "middle"
-      };
-    }
-    return customStyles;
-  };
-
 
   let titleTypeStep; let currentTitle = "";
   let mapTypeSteps = new Map([["mapping", "Mapping"], ["merging", "Merging"], ["custom", "Custom"], ["mastering", "Mastering"], ["ingestion", "Loading"]]);
@@ -301,159 +255,6 @@ const FlowPanel: React.FC<Props> = ({
     if (!flowRunning) return false;
     return (isStepRunning && flowRunning.name === flowName);
   };
-
-  const reorderFlowKeyDownHandler = (event, index, flowName, direction) => {
-    if (event.key === "Enter") {
-      reorderFlow(index, flowName, direction);
-      event.preventDefault();
-    }
-  };
-
-  let cards = flow.steps.map((step, index) => {
-    let sourceFormat = step.sourceFormat;
-    let stepNumber = step.stepNumber;
-    let viewStepId = `${flow.name}-${stepNumber}`;
-    let stepDefinitionType = step.stepDefinitionType ? step.stepDefinitionType.toLowerCase() : "";
-    let stepDefinitionTypeTitle = StepDefinitionTypeTitles[stepDefinitionType];
-    let stepWithJobDetail = latestJobData && latestJobData[flow.name] && latestJobData[flow.name] ? latestJobData[flow.name].find(el => el.stepId === step.stepId) : null;
-    return (
-      <div key={viewStepId} id="flowSettings">
-        <HCCard
-          className={styles.cardStyle}
-          title={StepDefinitionTypeTitles[step.stepDefinitionType] || "Unknown"}
-          actions={[
-            <div className={styles.reorder}>
-              {index !== 0 && canWriteFlow &&
-                <div className={styles.reorderLeft}>
-                  <HCTooltip text={RunToolTips.moveLeft} id="move-left-tooltip" placement="bottom">
-                    <i>
-                      <FontAwesomeIcon
-                        aria-label={`leftArrow-${step.stepName}`}
-                        icon={faArrowAltCircleLeft}
-                        className={styles.reorderFlowLeft}
-                        role="button"
-                        onClick={() => reorderFlow(index, flow.name, ReorderFlowOrderDirection.LEFT)}
-                        onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flow.name, ReorderFlowOrderDirection.LEFT)}
-                        tabIndex={0} />
-                    </i>
-                  </HCTooltip>
-                </div>
-              }
-              <div className={styles.reorderRight}>
-                <div className={styles.stepResponse}>
-                  {stepWithJobDetail ? lastRunResponse(stepWithJobDetail, flow.name) : ""}
-                </div>
-                {index < flow.steps.length - 1 && canWriteFlow &&
-                  <HCTooltip aria-label="icon: right" text="Move right" id="move-right-tooltip" placement="bottom" >
-                    <i>
-                      <FontAwesomeIcon
-                        aria-label={`rightArrow-${step.stepName}`}
-                        icon={faArrowAltCircleRight}
-                        className={styles.reorderFlowRight}
-                        role="button"
-                        onClick={() => reorderFlow(index, flow.name, ReorderFlowOrderDirection.RIGHT)}
-                        onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flow.name, ReorderFlowOrderDirection.RIGHT)}
-                        tabIndex={0} />
-                    </i>
-                  </HCTooltip>
-                }
-              </div>
-            </div>
-          ]}
-          titleExtra={
-            <div className={styles.actions}>
-              {hasOperatorRole ?
-                step.stepDefinitionType.toLowerCase() === "ingestion" ?
-                  <div {...getRootProps()} style={{display: "inline-block"}}>
-                    <input {...getInputProps()} id="fileUpload" />
-                    <div
-                      className={styles.run}
-                      aria-label={`runStep-${step.stepName}`}
-                      data-testid={"runStep-" + stepNumber}
-                      onClick={() => {
-                        setShowUploadError(false);
-                        setSingleIngest(true);
-                        setRunningStep(step);
-                        setRunningFlow(flow.name);
-                        openFilePicker();
-                      }}
-                    >
-                      <HCTooltip text={RunToolTips.ingestionStep} id="run-ingestion-tooltip" placement="bottom">
-                        <PlayCircleFill aria-label="icon: play-circle" color={themeColors.defaults.questionCircle} size={20} />
-                      </HCTooltip>
-                    </div>
-                  </div>
-                  :
-                  <div
-                    className={styles.run}
-                    onClick={() => {
-                      handleRunSingleStep(flow.name, step);
-                    }}
-                    aria-label={`runStep-${step.stepName}`}
-                    data-testid={"runStep-" + stepNumber}
-                  >
-                    <HCTooltip text={RunToolTips.otherSteps} id="run-tooltip" placement="bottom">
-                      <PlayCircleFill aria-label="icon: play-circle" color={themeColors.defaults.questionCircle} size={20} />
-                    </HCTooltip>
-                  </div>
-                :
-                <div
-                  className={styles.disabledRun}
-                  onClick={(event) => { event.stopPropagation(); event.preventDefault(); }}
-                  aria-label={"runStepDisabled-" + step.stepName}
-                  data-testid={"runStepDisabled-" + stepNumber}
-                >
-                  <PlayCircleFill size={20} />
-                </div>
-              }
-              {canWriteFlow ?
-                <HCTooltip text={RunToolTips.removeStep} id="delete-step-tooltip" placement="bottom">
-                  <div className={styles.delete} aria-label={`deleteStep-${step.stepName}`} onClick={() => handleStepDelete(flow.name, step)}>
-                    <X aria-label="icon: close" color={themeColors.primary} size={27} />
-                  </div>
-                </HCTooltip> :
-                <HCTooltip text={RunToolTips.removeStep} id="delete-step-tooltip" placement="bottom">
-                  <div className={styles.disabledDelete} aria-label={`deleteStepDisabled-${step.stepName}`} onClick={(event) => { event.stopPropagation(); event.preventDefault(); }}>
-                    <X aria-label="icon: close" color={themeColors.primary} size={27} />
-                  </div>
-                </HCTooltip>
-              }
-            </div>
-          }
-          footerClassName={styles.cardFooter}
-        >
-          <div aria-label={viewStepId + "-content"} className={styles.cardContent}
-            onMouseOver={(e) => handleMouseOver(e, viewStepId)}
-            onMouseLeave={(e) => setShowLinks("")} >
-            {sourceFormat ?
-              <div className={styles.format} style={sourceFormatStyle(sourceFormat)} >{sourceFormatOptions[sourceFormat].label}</div>
-              : null}
-            <div className={sourceFormat ? styles.loadStepName : styles.name}>{step.stepName}</div>
-            <div className={styles.cardLinks}
-              style={{display: showLinks === viewStepId && step.stepId && authorityByStepType[stepDefinitionType] ? "block" : "none"}}
-              aria-label={viewStepId + "-cardlink"}
-            >
-              <Link id={"tiles-step-view-" + viewStepId}
-                to={{
-                  pathname: `/tiles/${stepDefinitionType.toLowerCase() === "ingestion" ? "load" : "curate"}`,
-                  state: {
-                    stepToView: step.stepId,
-                    stepDefinitionType: stepDefinitionType,
-                    targetEntityType: step.targetEntityType
-                  }
-                }}
-              >
-                <div className={styles.cardLink} data-testid={`${viewStepId}-viewStep`}>View {stepDefinitionTypeTitle} steps</div>
-              </Link>
-            </div>
-          </div>
-          <div className={styles.uploadError}>
-            {showUploadError && flow.name === flowRunning.name && stepNumber === runningStep.stepNumber ? uploadError : ""}
-          </div>
-        </HCCard>
-      </div>
-    );
-  });
 
   const flowMenu = (flowName) => {
     return (
@@ -673,7 +474,35 @@ const FlowPanel: React.FC<Props> = ({
             {panelActions(flow.name, idx)}
           </Card.Header>
           <Accordion.Body className={styles.panelContent} ref={flowRef}>
-            {cards}
+            {flow.steps.map((step, i) => {
+              return <FlowCard
+                key={i}
+                index={i}
+                step={step}
+                flow={flow}
+                openFilePicker={openFilePicker}
+                setRunningStep={setRunningStep}
+                setRunningFlow={setRunningFlow}
+                handleStepDelete={handleStepDelete}
+                handleRunSingleStep={handleRunSingleStep}
+                latestJobData={latestJobData}
+                lastRunResponse={lastRunResponse}
+                reorderFlow={reorderFlow}
+                canWriteFlow={canWriteFlow}
+                hasOperatorRole={hasOperatorRole}
+                getRootProps={getRootProps}
+                getInputProps={getInputProps}
+                setSingleIngest={setSingleIngest}
+                showLinks={showLinks}
+                setShowLinks={setShowLinks}
+                setShowUploadError={setShowUploadError}
+                sourceFormatOptions={sourceFormatOptions}
+                runningStep={runningStep}
+                flowRunning={flowRunning}
+                showUploadError={showUploadError}
+                uploadError={uploadError}
+              />;
+            })}
           </Accordion.Body>
         </Card>
       </Accordion.Item>
