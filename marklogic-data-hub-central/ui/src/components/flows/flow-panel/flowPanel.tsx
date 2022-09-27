@@ -185,7 +185,9 @@ const FlowPanel: React.FC<Props> = ({
   };
 
   const isFlowEmpty = (flowName) => {
-    return flowsDeepCopy.filter((flow) => flow.name === flowName)[0]?.steps?.length < 1;
+    const flow = flows.filter((flow) => flow.name === flowName)[0];
+    if (flow.steps === undefined) return true;
+    return flow[0]?.steps?.length < 1;
   };
 
   const controlStepSelected = (flowName) => {
@@ -258,6 +260,9 @@ const FlowPanel: React.FC<Props> = ({
   };
 
   const flowMenu = (flowName) => {
+    const flowsCopy = [...flows];
+
+    console.log("FLow MEnu?", flowsCopy, flowName);
     return (
       <>
         <Dropdown.Header className="py-0 fs-6 mb-2 text-dark">{PopoverRunSteps.selectStepTitle}</Dropdown.Header>
@@ -270,10 +275,11 @@ const FlowPanel: React.FC<Props> = ({
             dataTestId={"select-all-toggle"}
             handleClick={(event) => onCheckboxChange(event, "", "", "", flowName, "", "", true)}
             label={checkAll[flowName] ? "Deselect All" : "Select All"}
-          >
-          </HCCheckbox>
+          />
+
         </div>
-        {flowsDeepCopy.filter((flow) => flow.name === flowName)[0]?.steps?.sort((a, b) => a.stepDefinitionType?.toLowerCase()?.localeCompare(b.stepDefinitionType?.toLowerCase())).map((step, index) => {
+        {/* This is working weird */}
+        {flowsCopy.filter((flow) => flow.name === flowName)[0]?.steps?.sort((a, b) => a.stepDefinitionType?.toLowerCase()?.localeCompare(b.stepDefinitionType?.toLowerCase())).map((step, index) => {
           return (
             <div key={index}>
               <div className={styles.titleTypeStep}>{handleTitleSteps(step?.stepDefinitionType?.toLowerCase())}</div>
@@ -301,7 +307,7 @@ const FlowPanel: React.FC<Props> = ({
     );
   };
 
-  const stepMenu = (flowName, i) => (
+  const addStepsMenu = (flowName, i) => (
     <Dropdown align="end" >
       <Dropdown.Toggle data-testid={`addStep-${flowName}`} aria-label={`addStep-${flowName}`} disabled={!canWriteFlow} variant="outline-light" className={canWriteFlow ? styles.stepMenu : styles.stepMenuDisabled}>
         {
@@ -371,8 +377,10 @@ const FlowPanel: React.FC<Props> = ({
     </Dropdown>
   );
 
-  const panelActions = (name, i) => (
-    <div
+  const panelActions = (name, i) => {
+    const flow =  flows.filter((flow) => flow.name === name)[0];
+    if (flow===undefined) return;
+    return (<div
       className={styles.panelActionsContainer}
       id="panelActions"
       onClick={event => {
@@ -380,6 +388,9 @@ const FlowPanel: React.FC<Props> = ({
         event.preventDefault();
       }}
     >
+      {console.log("Panel Actions")
+      // This menu is being called A LOT of times. Why? Where?
+      }
       {showStopButton(name) && (<HCTooltip text={canUserStopFlow ? RunToolTips.stopRun : RunToolTips.stopRunMissingPermission} id="stop-run" placement="top">
         <span>
           <HCButton
@@ -397,6 +408,7 @@ const FlowPanel: React.FC<Props> = ({
           </HCButton>
         </span>
       </HCTooltip>)}
+
       <span id="stepsDropdown" className={styles.hoverColor} onMouseLeave={(e) => { setCurrentTooltip(""); }}>
         <Dropdown as={ButtonGroup}>
           <HCTooltip show={currentTooltip === name} text={isFlowEmpty(name) ? RunToolTips.runEmptyFlow : !controlStepSelected(name) ? RunToolTips.selectAStep : ""} placement="top" id={`run-flow-tooltip`}>
@@ -409,7 +421,7 @@ const FlowPanel: React.FC<Props> = ({
                 id={`runFlow-${name}`}
                 size="sm"
                 onClick={() => handleRunFlow(i, name)}
-                disabled={!controlStepSelected(name) || flowsDeepCopy.filter((flow) => flow.name === name)[0]?.steps?.length < 1}
+                disabled={!controlStepSelected(name) || flow.steps === undefined || (flow.steps !== undefined && flow.steps.length < 1)}
               >
                 <><PlayCircleFill className={styles.runIcon} /> Run Flow </>
               </HCButton>
@@ -423,7 +435,9 @@ const FlowPanel: React.FC<Props> = ({
           </Dropdown.Menu>
         </Dropdown>
       </span>
-      {stepMenu(name, i)}
+
+      {addStepsMenu(name, i)}
+
       <span className={styles.deleteFlow}>
         {canWriteFlow ?
           <HCTooltip text="Delete Flow" id="disabled-trash-tooltip" placement="bottom">
@@ -447,8 +461,10 @@ const FlowPanel: React.FC<Props> = ({
             </i>
           </HCTooltip>}
       </span>
-    </div>
-  );
+
+    </div>)
+    ;
+  };
 
   return (
     <Accordion className={"w-100"} flush key={idx} id={flow.name} activeKey={activeKeys.includes(idx) ? idx : ""} defaultActiveKey={activeKeys.includes(idx) ? idx : ""}>
