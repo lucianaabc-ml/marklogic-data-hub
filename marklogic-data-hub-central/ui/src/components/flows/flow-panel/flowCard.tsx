@@ -78,8 +78,6 @@ const FlowCard: React.FC<Props> = ({index, step, flow, openFilePicker,
     setShowLinks(name);
   };
 
-
-
   // For role-based privileges
   const authorityService = useContext(AuthoritiesContext);
   const authorityByStepType = {
@@ -89,7 +87,6 @@ const FlowCard: React.FC<Props> = ({index, step, flow, openFilePicker,
     merging: authorityService.canReadMatchMerge(),
     custom: authorityService.canReadCustom()
   };
-
 
   //Custom CSS for source Format
   const sourceFormatStyle = (sourceFmt) => {

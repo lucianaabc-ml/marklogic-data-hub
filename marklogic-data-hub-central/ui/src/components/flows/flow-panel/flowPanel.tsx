@@ -9,6 +9,7 @@ import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, XCircleFil
 import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
 import {ReorderFlowOrderDirection} from "../types";
 import FlowCard from "./flowCard";
+import {Flow, Step} from "../../../types/run-types";
 
 import {dynamicSortDates} from "@util/conversionFunctions";
 
@@ -17,45 +18,45 @@ import sourceFormatOptions from "@config/formats.config";
 interface Props {
   idx: string;
   flowRef: React.RefObject<any>;
-  flow: any;
-  flows: any;
+  flow: Flow;
+  flowRunning: Flow;
+  flows: Flow[];
   flowsDeepCopy: any;
-  steps: any;
-  selectedSteps: any;
+  steps: Step[];
+  selectedSteps: Step[];
   selectedStepOptions: any;
-  runningStep: any;
-  isStepRunning: any;
+  runningStep: Step;
+  isStepRunning: boolean;
   arrayLoadChecksSteps:any;
   checkAll: any;
   canWriteFlow: boolean;
   canUserStopFlow: boolean;
   hasOperatorRole: boolean;
-  getFlowWithJobInfo: any;
+  getFlowWithJobInfo: (flowNum)=>Promise<void>;
   latestJobData: any;
-  flowRunning: any;
-  uploadError: any;
+  uploadError: string;
   showUploadError: any;
   reorderFlow: (id: string, flowName: string, direction: ReorderFlowOrderDirection) => void;
-  handleRunSingleStep: any;
-  handleRunFlow: any;
-  handleFlowDelete: any;
-  handleStepAdd: any;
-  handleStepDelete: any;
-  onCheckboxChange: any;
-  stopRun: any;
-  setJobId: any;
-  openFilePicker: any;
-  setRunningStep: any;
-  setRunningFlow: any;
+  handleRunSingleStep: (flowName: string, step: any) => Promise<void>;
+  handleRunFlow: (index: number, name: string) => Promise<void>;
+  handleFlowDelete: (name: string) =>void;
+  handleStepAdd: (stepName:string, flowName: string, stepType:string)=>Promise<void>;
+  handleStepDelete: (flowName: string, stepDetails: any)=> void;
+  onCheckboxChange: (event, checkedValues?, stepNumber?, stepDefinitionType?, flowNames?, stepId?, sourceFormat?, fromCheckAll?)=>void;
+  stopRun: () => Promise<void>;
+  openFilePicker: ()=>void;
+  setJobId: React.Dispatch<React.SetStateAction<string>>;
+  setRunningStep: React.Dispatch<any>;
+  setRunningFlow: React.Dispatch<any>;
   getInputProps: any;
   getRootProps: any;
-  setShowUploadError:any;
-  setSingleIngest:any;
+  setShowUploadError:React.Dispatch<React.SetStateAction<boolean>>;
+  setSingleIngest:React.Dispatch<React.SetStateAction<boolean>>;
   setOpenJobResponse: React.Dispatch<React.SetStateAction<boolean>>;
-  setNewFlow: any;
-  setFlowData: any;
-  setTitle: any;
-  setActiveKeys: any;
+  setNewFlow: React.Dispatch<React.SetStateAction<boolean>>;
+  setFlowData: React.Dispatch<React.SetStateAction<{}>>;
+  setTitle: React.Dispatch<React.SetStateAction<string>>;
+  setActiveKeys: React.Dispatch<any>;
   activeKeys: any;
 }
 
@@ -474,7 +475,7 @@ const FlowPanel: React.FC<Props> = ({
             {panelActions(flow.name, idx)}
           </Card.Header>
           <Accordion.Body className={styles.panelContent} ref={flowRef}>
-            {flow.steps.map((step, i) => {
+            {flow.steps !== undefined && flow.steps?.map((step, i) => {
               return <FlowCard
                 key={i}
                 index={i}

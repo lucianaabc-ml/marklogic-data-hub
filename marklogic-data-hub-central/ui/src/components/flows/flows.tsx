@@ -1,7 +1,6 @@
 import "./flows.scss";
 
 import * as _ from "lodash";
-
 import {HCButton, HCTooltip} from "@components/common";
 import {useLocation} from "react-router-dom";
 import {SecurityTooltips} from "@config/tooltips.config";
@@ -22,8 +21,8 @@ enum ReorderFlowOrderDirection {
 }
 
 export interface Props {
-  flows: any;
-  steps: any;
+  flows: Flow[];
+  steps: Step[];
   deleteFlow: any;
   createFlow: any;
   updateFlow: (name: any, description: any, steps: any) => Promise<void>;
@@ -142,6 +141,7 @@ const Flows: React.FC<Props> = ({
     };
     if (!flows.length) return;
     const currentFlow = flows.filter(({name}) => name === flowName).shift();
+    if (!currentFlow?.steps) return;
     if (currentFlow?.steps?.length > addFlowDirty[flowName]) {
       // Scrolling should happen on the last update after the number of steps in the flow has been updated
       scrollToEnd(flowName);
@@ -196,6 +196,7 @@ const Flows: React.FC<Props> = ({
       // Get the latest job info when a step is added to an existing flow from Curate or Load Tile
       if (JSON.stringify(flows) !== JSON.stringify([])) {
         let stepsInFlow = flows[newStepToFlowOptions?.flowsDefaultKey]?.steps;
+        if (stepsInFlow === undefined) return;
         if (newStepToFlowOptions && newStepToFlowOptions.addingStepToFlow && newStepToFlowOptions.existingFlow && newStepToFlowOptions.flowsDefaultKey && newStepToFlowOptions.flowsDefaultKey !== -1) {
           getFlowWithJobInfo(newStepToFlowOptions.flowsDefaultKey);
           if (startRun) {
@@ -240,16 +241,19 @@ const Flows: React.FC<Props> = ({
     //run step after step is added to a new flow
     if (newStepToFlowOptions && !newStepToFlowOptions.existingFlow && startRun && addedFlowName) {
       let indexFlow = flows?.findIndex(i => i.name === addedFlowName);
-      if (flows[indexFlow]?.steps.length > 0) {
-        let indexStep = flows[indexFlow].steps.findIndex(s => s.stepName === newStepToFlowOptions.newStepName);
-        if (flows[indexFlow].steps[indexStep].stepDefinitionType.toLowerCase() === "ingestion") {
+      const _steps =flows[indexFlow].steps;
+      if (_steps===undefined) return;
+
+      if (_steps.length > 0) {
+        let indexStep = _steps.findIndex(s => s.stepName === newStepToFlowOptions.newStepName);
+        if (_steps[indexStep].stepDefinitionType.toLowerCase() === "ingestion") {
           setShowUploadError(false);
-          setRunningStep(flows[indexFlow].steps[indexStep]);
+          setRunningStep(_steps[indexStep]);
           setSingleIngest(true);
           setRunningFlow(addedFlowName);
           openFilePicker();
         } else {
-          runStep(addedFlowName, flows[indexFlow].steps[indexStep]);
+          runStep(addedFlowName, _steps[indexStep]);
           setAddedFlowName("");
           setStartRun(false);
         }
@@ -261,6 +265,7 @@ const Flows: React.FC<Props> = ({
     if (flows && flows.length > 0) {
       const auxObj = {};
       flows.forEach((flow) => {
+        if (flow.steps === undefined) return;
         if (flow.steps.find((step) => step.stepDefinitionType.toLowerCase() !== "ingestion" && !selectedStepOptions[flow.name + "-" + step.stepName + "-" + step.stepDefinitionType.toLowerCase()])) {
           auxObj[flow.name] = false;
         } else if (flow.steps.find((step) => step.stepDefinitionType.toLowerCase() === "ingestion" && selectedStepOptions[flow.name + "-" + step.stepName + "-" + step.stepDefinitionType.toLowerCase()])) {
@@ -318,7 +323,7 @@ const Flows: React.FC<Props> = ({
   };
 
 
-  const handleStepAdd = async (stepName, flowName, stepType) => {
+  const handleStepAdd = async (stepName: string, flowName: string, stepType: string) => {
     if (isStepInFlow(stepName, flowName)) {
       setAddExistingStepDialogVisible(true);
     } else {
@@ -401,6 +406,7 @@ const Flows: React.FC<Props> = ({
       setActiveKeys(newActiveKeys);
     }
     await setAddStepDialogVisible(false);
+    // @ts-ignore
     await setAddFlowDirty({...addFlowDirty, [flowName]: flows[flowIndex].steps.length});
   };
 
@@ -773,6 +779,7 @@ const Flows: React.FC<Props> = ({
     let flowNum = flows.findIndex((flow) => flow.name === flowName);
     let flowDesc = flows[flowNum]["description"];
     const stepList = flows[flowNum]["steps"];
+    if (stepList === undefined) return;
     let newSteps = stepList;
 
     if (direction === ReorderFlowOrderDirection.RIGHT) {
@@ -812,7 +819,7 @@ const Flows: React.FC<Props> = ({
   const getFlowWithJobInfo = async (flowNum) => {
     let currentFlow = flows[flowNum];
 
-    if (currentFlow === undefined) {
+    if (currentFlow === undefined || currentFlow["steps"]===undefined) {
       return;
     }
 
@@ -878,7 +885,7 @@ const Flows: React.FC<Props> = ({
           {flows && flows.map((flow, i) => {
             return (<FlowPanel
               key={i}
-              idx={i}
+              idx={i.toString()}
               flowRef={flowPanelsRef[flow.name]}
               flow={flow}
               flowRunning={flowRunning}

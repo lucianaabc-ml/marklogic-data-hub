@@ -14,10 +14,10 @@ export const deleteConfirmationModal = (isVisible: boolean, flowName: string, on
       <div className={`mb-4 ${styles.confirmationText}`}>Are you sure you want to delete the <strong>{flowName}</strong> flow?</div>
       <div>
         <HCButton variant="outline-light" aria-label={"No"} className={"me-2"} onClick={onCancel}>
-                    No
+          No
         </HCButton>
         <HCButton aria-label={"Yes"} variant="primary" type="submit" onClick={() => onOk(flowName)}>
-                    Yes
+          Yes
         </HCButton>
       </div>
     </Modal.Body>
@@ -35,10 +35,10 @@ export const deleteStepConfirmationModal = (isVisible: boolean, stepName, stepNu
       <div className={`mb-4 ${styles.confirmationText}`}>Are you sure you want to remove the <strong>{stepName}</strong> step from the <strong>{flowName}</strong> flow?</div>
       <div>
         <HCButton variant="outline-light" aria-label={"No"} className={"me-2"} onClick={onCancel}>
-                    No
+          No
         </HCButton>
         <HCButton aria-label={"Yes"} variant="primary" type="submit" onClick={() => onOk(flowName, stepNumber)}>
-                    Yes
+          Yes
         </HCButton>
       </div>
     </Modal.Body>
@@ -64,10 +64,10 @@ export const addStepConfirmationModal = (isVisible: boolean, onOk, onCancel, flo
       </div>
       <div>
         <HCButton variant="outline-light" aria-label={"No"} className={"me-2"} onClick={onCancel}>
-                    No
+          No
         </HCButton>
         <HCButton aria-label={"Yes"} variant="primary" type="submit" onClick={() => onOk(stepName, flowName, stepType)}>
-                    Yes
+          Yes
         </HCButton>
       </div>
     </Modal.Body>
@@ -89,7 +89,7 @@ export const addExistingStepConfirmationModal = (isVisible: boolean, stepName, f
       </div>
       <div>
         <HCButton variant="primary" aria-label={"Ok"} type="submit" className={"me-2"} onClick={onOk}>
-                    OK
+          OK
         </HCButton>
       </div>
     </Modal.Body>
