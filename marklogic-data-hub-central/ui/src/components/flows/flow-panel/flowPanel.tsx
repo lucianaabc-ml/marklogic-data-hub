@@ -113,7 +113,7 @@ const FlowPanel: React.FC<Props> = ({
     });
     if (flow.steps === undefined) return;
     
-    if (selectedSteps.sort()==flow.steps.sort()) {
+    if (selectedSteps.length==flow.steps.length) {
       console.log("all checked")
       setAllChecked(true)
     } else {
