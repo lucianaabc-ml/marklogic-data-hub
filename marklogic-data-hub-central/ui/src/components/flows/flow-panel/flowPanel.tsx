@@ -1,17 +1,17 @@
-import React, {useState} from "react";
-import {Accordion, ButtonGroup, Card, Dropdown} from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Accordion, ButtonGroup, Card, Dropdown } from "react-bootstrap";
 import styles from "../flows.module.scss";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {PopoverRunSteps, RunToolTips, SecurityTooltips} from "@config/tooltips.config";
-import {HCTooltip, HCButton, HCCheckbox} from "@components/common";
-import {faTrashAlt} from "@fortawesome/free-regular-svg-icons";
-import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, XCircleFill} from "react-bootstrap-icons";
-import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
-import {ReorderFlowOrderDirection} from "../types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { PopoverRunSteps, RunToolTips, SecurityTooltips } from "@config/tooltips.config";
+import { HCTooltip, HCButton, HCCheckbox } from "@components/common";
+import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
+import { ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, XCircleFill } from "react-bootstrap-icons";
+import { faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle } from "@fortawesome/free-solid-svg-icons";
+import { ReorderFlowOrderDirection } from "../types";
 import FlowCard from "./flowCard";
-import {Flow, Step} from "../../../types/run-types";
+import { Flow, Step } from "../../../types/run-types";
 
-import {dynamicSortDates} from "@util/conversionFunctions";
+import { dynamicSortDates } from "@util/conversionFunctions";
 
 import sourceFormatOptions from "@config/formats.config";
 
@@ -21,37 +21,34 @@ interface Props {
   flow: Flow;
   flowRunning: Flow;
   flows: Flow[];
-  flowsDeepCopy: any;
   steps: Step[];
-  selectedSteps: Step[];
-  selectedStepOptions: any;
+  allSelectedSteps: Step[];
+  setAllSelectedSteps: React.Dispatch<any>;
   runningStep: Step;
   isStepRunning: boolean;
-  arrayLoadChecksSteps:any;
-  checkAll: any;
+  arrayLoadChecksSteps: any;
   canWriteFlow: boolean;
   canUserStopFlow: boolean;
   hasOperatorRole: boolean;
-  getFlowWithJobInfo: (flowNum)=>Promise<void>;
+  getFlowWithJobInfo: (flowNum) => Promise<void>;
   latestJobData: any;
   uploadError: string;
   showUploadError: any;
   reorderFlow: (id: string, flowName: string, direction: ReorderFlowOrderDirection) => void;
   handleRunSingleStep: (flowName: string, step: any) => Promise<void>;
   handleRunFlow: (index: number, name: string) => Promise<void>;
-  handleFlowDelete: (name: string) =>void;
-  handleStepAdd: (stepName:string, flowName: string, stepType:string)=>Promise<void>;
-  handleStepDelete: (flowName: string, stepDetails: any)=> void;
-  onCheckboxChange: (event, checkedValues?, stepNumber?, stepDefinitionType?, flowNames?, stepId?, sourceFormat?, fromCheckAll?)=>void;
+  handleFlowDelete: (name: string) => void;
+  handleStepAdd: (stepName: string, flowName: string, stepType: string) => Promise<void>;
+  handleStepDelete: (flowName: string, stepDetails: any) => void;
   stopRun: () => Promise<void>;
-  openFilePicker: ()=>void;
+  openFilePicker: () => void;
   setJobId: React.Dispatch<React.SetStateAction<string>>;
   setRunningStep: React.Dispatch<any>;
   setRunningFlow: React.Dispatch<any>;
   getInputProps: any;
   getRootProps: any;
-  setShowUploadError:React.Dispatch<React.SetStateAction<boolean>>;
-  setSingleIngest:React.Dispatch<React.SetStateAction<boolean>>;
+  setShowUploadError: React.Dispatch<React.SetStateAction<boolean>>;
+  setSingleIngest: React.Dispatch<React.SetStateAction<boolean>>;
   setOpenJobResponse: React.Dispatch<React.SetStateAction<boolean>>;
   setNewFlow: React.Dispatch<React.SetStateAction<boolean>>;
   setFlowData: React.Dispatch<React.SetStateAction<{}>>;
@@ -61,16 +58,14 @@ interface Props {
 }
 
 const FlowPanel: React.FC<Props> = ({
-  flowsDeepCopy,
   flow,
   flows,
   flowRef,
   steps,
   idx,
-  checkAll,
   latestJobData,
-  selectedSteps,
-  selectedStepOptions,
+  allSelectedSteps,
+  setAllSelectedSteps,
   openFilePicker,
   setRunningStep,
   setRunningFlow,
@@ -88,7 +83,6 @@ const FlowPanel: React.FC<Props> = ({
   handleRunFlow,
   handleFlowDelete,
   stopRun,
-  onCheckboxChange,
   isStepRunning,
   flowRunning,
   reorderFlow,
@@ -104,11 +98,70 @@ const FlowPanel: React.FC<Props> = ({
   setFlowData,
   setTitle
 }) => {
-  const [currentTooltip, setCurrentTooltip] = useState("");
+  console.log("Flow Panel")
   const [showLinks, setShowLinks] = useState("");
+  const [selectedSteps, setSelectedSteps] = useState<any>([]);
+  const [allChecked, setAllChecked] = useState<boolean>(false);
 
   let titleTypeStep; let currentTitle = "";
   let mapTypeSteps = new Map([["mapping", "Mapping"], ["merging", "Merging"], ["custom", "Custom"], ["mastering", "Mastering"], ["ingestion", "Loading"]]);
+
+  useEffect(() => {
+    setAllSelectedSteps({
+      ...allSelectedSteps,
+      [flow.name]: [...selectedSteps]
+    });
+    if (flow.steps === undefined) return;
+    
+    if (selectedSteps.sort()==flow.steps.sort()) {
+      console.log("all checked")
+      setAllChecked(true)
+    } else {
+      console.log("not all checked")
+      setAllChecked(false)
+    }
+  }, [selectedSteps]);
+
+  useEffect(()=>{
+    console.log("all checked", allChecked)
+  },[allChecked])
+
+  const handleCheckAll = (event) => {
+    if (flow.steps === undefined) return;
+    // Faltaría la lógica de que solo seleccione un load step si hay mas de uno
+    if (!allChecked) {
+      // check all
+      setSelectedSteps(flow.steps)
+    } else {
+      // uncheck all
+      setSelectedSteps([])
+    }
+  }
+
+  const handleCheck = (stepName) => {
+    if (flow.steps === undefined) return;
+    let newSelectedSteps = [...selectedSteps];
+    // Faltaría la lógica de que solo seleccione un load step si hay mas de uno
+    if (isStepSelected(stepName)) {
+      // if its selected, unselect
+      newSelectedSteps = newSelectedSteps.filter((step)=>{
+        return step.stepName !== stepName
+      });
+      setSelectedSteps(newSelectedSteps)
+    } else {
+      // if not selected, select
+      const checkedStep = flow.steps.find((step)=>{
+        return step.stepName === stepName
+      })
+      newSelectedSteps.push(checkedStep);
+      setSelectedSteps(newSelectedSteps)
+    }
+  }
+
+  const isStepSelected = (stepName: string): boolean => {
+    return (selectedSteps.find(step => step.stepName === stepName) !== undefined)
+  }
+
   const handleTitleSteps = (stepType) => {
     if (currentTitle !== stepType) {
       titleTypeStep = mapTypeSteps.get(stepType) ? mapTypeSteps.get(stepType) : "";
@@ -122,6 +175,7 @@ const FlowPanel: React.FC<Props> = ({
     let result = flowRunning.steps?.find(r => (flowRunning.name === flowId && r.stepId === stepId));
     return result !== undefined;
   };
+
   const lastRunResponse = (step, flow) => {
     let stepEndTime;
     if (step.stepEndTime) {
@@ -187,13 +241,7 @@ const FlowPanel: React.FC<Props> = ({
   const isFlowEmpty = (flowName) => {
     const flow = flows.filter((flow) => flow.name === flowName)[0];
     if (flow.steps === undefined) return true;
-    return flow[0]?.steps?.length < 1;
-  };
-
-  const controlStepSelected = (flowName) => {
-    let obj = selectedSteps.find(obj => obj.flowName === flowName);
-    const obj2 = Object.keys(selectedStepOptions).find(obj => obj.includes(flowName));
-    if (obj && obj2) { return true; } else { return false; }
+    return flow.steps?.length < 1;
   };
 
   const controlDisabled = (step, flowName) => {
@@ -241,7 +289,7 @@ const FlowPanel: React.FC<Props> = ({
     e.stopPropagation();
     e.preventDefault();
     //parse for latest job to display
-    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({jobId: step.jobId, date: step.stepEndTime}));
+    let completedJobsWithDates = latestJobData[name].filter(step => step.hasOwnProperty("jobId")).map((step, i) => ({ jobId: step.jobId, date: step.stepEndTime }));
     let sortedJobs = completedJobsWithDates.sort(dynamicSortDates("date"));
     setJobId(sortedJobs[0].jobId);
     setOpenJobResponse(true);
@@ -250,61 +298,13 @@ const FlowPanel: React.FC<Props> = ({
   const OpenEditFlowDialog = (e, index) => {
     e.stopPropagation();
     setTitle("Edit Flow");
-    setFlowData(prevState => ({...prevState, ...flows[index]}));
+    setFlowData(prevState => ({ ...prevState, ...flows[index] }));
     setNewFlow(true);
   };
 
   const showStopButton = (flowName: string): boolean => {
     if (!flowRunning) return false;
     return (isStepRunning && flowRunning.name === flowName);
-  };
-
-  const flowMenu = (flowName) => {
-    const flowsCopy = [...flows];
-
-    console.log("FLow MEnu?", flowsCopy, flowName);
-    return (
-      <>
-        <Dropdown.Header className="py-0 fs-6 mb-2 text-dark">{PopoverRunSteps.selectStepTitle}</Dropdown.Header>
-        <hr />
-        <div className={styles.divCheckAll}>
-          <HCCheckbox
-            id={"checkAll"}
-            value={checkAll[flowName]}
-            checked={checkAll[flowName]}
-            dataTestId={"select-all-toggle"}
-            handleClick={(event) => onCheckboxChange(event, "", "", "", flowName, "", "", true)}
-            label={checkAll[flowName] ? "Deselect All" : "Select All"}
-          />
-
-        </div>
-        {/* This is working weird */}
-        {flowsCopy.filter((flow) => flow.name === flowName)[0]?.steps?.sort((a, b) => a.stepDefinitionType?.toLowerCase()?.localeCompare(b.stepDefinitionType?.toLowerCase())).map((step, index) => {
-          return (
-            <div key={index}>
-              <div className={styles.titleTypeStep}>{handleTitleSteps(step?.stepDefinitionType?.toLowerCase())}</div>
-              <div key={index} className={styles.divItem}>
-                <HCTooltip text={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step, flowName) ? RunToolTips.loadStepRunFlow : "" : ""} placement="left" id={`tooltip`}>
-                  <div className="divCheckBoxStep">
-                    <HCCheckbox
-                      tooltip={step.stepName}
-                      placementTooltip={"top"}
-                      label={countLetters(step.stepName) ? step.stepName : undefined}
-                      id={step.stepName}
-                      value={step.stepName}
-                      handleClick={(event) => onCheckboxChange(event, step.stepName, step.stepNumber, step.stepDefinitionType, flowName, step.stepId, step.sourceFormat)}
-                      checked={!!selectedStepOptions[flowName + "-" + step.stepName + "-" + step.stepDefinitionType.toLowerCase()]}
-                      disabled={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step, flowName) : false}
-                      removeMargin={true}
-                    >{step.stepName}
-                    </HCCheckbox></div></HCTooltip>
-              </div>
-            </div>
-          );
-        })}
-        <Dropdown.Header className="py-0 fs-6 mt-2 text-danger" style={{whiteSpace: "pre-line"}} id="errorMessageEmptySteps">{controlStepSelected(flowName) ? "" : PopoverRunSteps.selectOneStepError}</Dropdown.Header>
-      </>
-    );
   };
 
   const addStepsMenu = (flowName, i) => (
@@ -378,8 +378,8 @@ const FlowPanel: React.FC<Props> = ({
   );
 
   const panelActions = (name, i) => {
-    const flow =  flows.filter((flow) => flow.name === name)[0];
-    if (flow===undefined) return;
+    const flow = flows.filter((flow) => flow.name === name)[0];
+    if (flow === undefined) return;
     return (<div
       className={styles.panelActionsContainer}
       id="panelActions"
@@ -388,9 +388,6 @@ const FlowPanel: React.FC<Props> = ({
         event.preventDefault();
       }}
     >
-      {console.log("Panel Actions")
-      // This menu is being called A LOT of times. Why? Where?
-      }
       {showStopButton(name) && (<HCTooltip text={canUserStopFlow ? RunToolTips.stopRun : RunToolTips.stopRunMissingPermission} id="stop-run" placement="top">
         <span>
           <HCButton
@@ -408,11 +405,10 @@ const FlowPanel: React.FC<Props> = ({
           </HCButton>
         </span>
       </HCTooltip>)}
-
-      <span id="stepsDropdown" className={styles.hoverColor} onMouseLeave={(e) => { setCurrentTooltip(""); }}>
+      <span id="stepsDropdown" className={styles.hoverColor}>
         <Dropdown as={ButtonGroup}>
-          <HCTooltip show={currentTooltip === name} text={isFlowEmpty(name) ? RunToolTips.runEmptyFlow : !controlStepSelected(name) ? RunToolTips.selectAStep : ""} placement="top" id={`run-flow-tooltip`}>
-            <span onMouseEnter={(e) => { !controlStepSelected(name) || isFlowEmpty(name) ? setCurrentTooltip(name) : void 0; }} onMouseLeave={(e) => { !isFlowEmpty(name) ? setCurrentTooltip("") : void 0; }} id={`${name}`}>
+          <HCTooltip text={isFlowEmpty(name) ? RunToolTips.runEmptyFlow : selectedSteps.length < 1 ? RunToolTips.selectAStep : ""} placement="top" id={`run-flow-tooltip`}>
+            <span id={`${name}`}>
               <HCButton
                 variant="transparent"
                 className={styles.runFlow}
@@ -421,7 +417,7 @@ const FlowPanel: React.FC<Props> = ({
                 id={`runFlow-${name}`}
                 size="sm"
                 onClick={() => handleRunFlow(i, name)}
-                disabled={!controlStepSelected(name) || flow.steps === undefined || (flow.steps !== undefined && flow.steps.length < 1)}
+                disabled={selectedSteps.length < 1 || flow.steps === undefined || (flow.steps !== undefined && flow.steps.length < 1)}
               >
                 <><PlayCircleFill className={styles.runIcon} /> Run Flow </>
               </HCButton>
@@ -431,7 +427,45 @@ const FlowPanel: React.FC<Props> = ({
             <GearFill className={styles.runIcon} role="step-settings button" aria-label={`stepSettings-${name}`} />
           </Dropdown.Toggle>
           <Dropdown.Menu className={styles.dropdownMenu}>
-            {flowMenu(name)}
+            <>
+              <Dropdown.Header className="py-0 fs-6 mb-2 text-dark">{PopoverRunSteps.selectStepTitle}</Dropdown.Header>
+              <hr />
+              <div className={styles.divCheckAll}>
+                <HCCheckbox
+                  id={"checkAll"}
+                  value={allChecked}
+                  checked={allChecked}
+                  dataTestId={"select-all-toggle"}
+                  handleClick={handleCheckAll}
+                  label={allChecked ? "Deselect All" : "Select All"}
+                />
+              </div>
+              {/* This is working weird */}
+              {flows.filter((flow) => flow.name === name)[0]?.steps?.sort((a, b) => a.stepDefinitionType?.toLowerCase()?.localeCompare(b.stepDefinitionType?.toLowerCase())).map((step, index) => {
+                return (
+                  <div key={index}>
+                    <div className={styles.titleTypeStep}>{handleTitleSteps(step?.stepDefinitionType?.toLowerCase())}</div>
+                    <div key={index} className={styles.divItem}>
+                      <HCTooltip text={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step, name) ? RunToolTips.loadStepRunFlow : "" : ""} placement="left" id={`tooltip`}>
+                        <div className="divCheckBoxStep">
+                          <HCCheckbox
+                            tooltip={step.stepName}
+                            placementTooltip={"top"}
+                            label={countLetters(step.stepName) ? step.stepName : undefined}
+                            id={step.stepName}
+                            value={step.stepName}
+                            handleClick={() => handleCheck(step.stepName)}
+                            checked={isStepSelected(step.stepName)}
+                            disabled={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step, name) : false}
+                            removeMargin={true}
+                          >{step.stepName}
+                          </HCCheckbox></div></HCTooltip>
+                    </div>
+                  </div>
+                );
+              })}
+              <Dropdown.Header className="py-0 fs-6 mt-2 text-danger" style={{ whiteSpace: "pre-line" }} id="errorMessageEmptySteps">{!(selectedSteps.length < 1) ? "" : PopoverRunSteps.selectOneStepError}</Dropdown.Header>
+            </>
           </Dropdown.Menu>
         </Dropdown>
       </span>
@@ -463,7 +497,7 @@ const FlowPanel: React.FC<Props> = ({
       </span>
 
     </div>)
-    ;
+      ;
   };
 
   return (

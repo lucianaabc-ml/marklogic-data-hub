@@ -1,16 +1,16 @@
-import React, {useState, useEffect, useContext} from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styles from "./Run.module.scss";
 import Flows from "@components/flows/flows";
 import axios from "axios";
-import {AuthoritiesContext} from "@util/authorities";
-import {UserContext} from "@util/user-context";
+import { AuthoritiesContext } from "@util/authorities";
+import { UserContext } from "@util/user-context";
 import tiles from "../config/tiles.config";
 //import {getFromPath} from "../util/json-utils";
-import {MissingPagePermission} from "@config/messages.config";
+import { MissingPagePermission } from "@config/messages.config";
 import JobResponse from "@components/job-response/job-response";
-import {ErrorMessageContext} from "@util/error-message-context";
+import { ErrorMessageContext } from "@util/error-message-context";
 //import Spinner from "react-bootstrap/Spinner";
-import {Flow, InitialFlow, Step} from "../types/run-types";
+import { Flow, InitialFlow, Step } from "../types/run-types";
 
 interface PollConfig {
   interval: number;
@@ -24,8 +24,9 @@ const Statuses = {
   "FINISHED_WITH_ERRORS": "finished_with_errors"
 };
 const Run = (props) => {
-  const {handleError} = useContext(UserContext);
-  const {setErrorMessageOptions} = useContext(ErrorMessageContext);
+  console.log("Run")
+  const { handleError } = useContext(UserContext);
+  const { setErrorMessageOptions } = useContext(ErrorMessageContext);
   const [isLoading, setIsLoading] = useState(false);
   const [flows, setFlows] = useState<Flow[]>([]);
   const [steps, setSteps] = useState<any>({});
@@ -181,7 +182,7 @@ const Run = (props) => {
   };
 
   const onReorderFlow = (flowIndex: number, newSteps: Array<any>) => {
-    const newFlow = {...flows[flowIndex], steps: newSteps};
+    const newFlow = { ...flows[flowIndex], steps: newSteps };
     const newFlows = [...flows];
     newFlows[flowIndex] = newFlow;
     setFlows(newFlows);
@@ -227,7 +228,7 @@ const Run = (props) => {
   const getFlowRunning = (flowName: string, stepNumbers: string[]) => {
     const flow = flows.find(flow => flow.name === flowName);
     const _stepsRunning = flow?.steps?.filter(step => { return stepNumbers.includes(step.stepNumber); });
-    (flow && _stepsRunning) ? setFlowRunning({...flow, steps: _stepsRunning}) : setFlowRunning(InitialFlow);
+    (flow && _stepsRunning) ? setFlowRunning({ ...flow, steps: _stepsRunning }) : setFlowRunning(InitialFlow);
   };
 
   const finishRun = () => {
@@ -236,6 +237,7 @@ const Run = (props) => {
   };
 
   const runFlowSteps = async (flowName: string, steps: Step[], formData: any) => {
+    console.log("runFlowSteps", flowName, steps)
     setIsStepRunning(true);
     let stepNumbers: string[] = steps.map((step) => {
       return step.stepNumber;
@@ -269,13 +271,13 @@ const Run = (props) => {
                 }
               }
               for (let i = 0; i < steps.length; i++) {
-                setRunEnded({flowId: flowName, stepId: steps[i].stepNumber});
+                setRunEnded({ flowId: flowName, stepId: steps[i].stepNumber });
 
               }
             }).catch(function (error) {
               console.error("Flow timeout", error);
               for (let i = 0; i < steps.length; i++) {
-                setRunEnded({flowId: flowName, stepId: steps[i]});
+                setRunEnded({ flowId: flowName, stepId: steps[i] });
               }
             });
         }, pollConfig.interval);
@@ -283,7 +285,7 @@ const Run = (props) => {
       }
     } catch (error) {
       console.error("Error running step", error);
-      setRunEnded({flowId: flowName, stepId: steps});
+      setRunEnded({ flowId: flowName, stepId: steps });
       if (error.response && error.response.data && (error.response.data.message.includes("The total size of all files in a single upload must be 100MB or less.") || error.response.data.message.includes("Uploading files to server failed"))) {
         setUploadError(error.response.data.message);
       } else {
@@ -318,17 +320,17 @@ const Run = (props) => {
             return res;
           }, pollConfig.interval)
             .then(function (response: any) {
-              setRunEnded({flowId: flowName, stepId: stepNumber});
+              setRunEnded({ flowId: flowName, stepId: stepNumber });
             }).catch(function (error) {
               console.error("Flow timeout", error);
-              setRunEnded({flowId: flowName, stepId: stepNumber});
+              setRunEnded({ flowId: flowName, stepId: stepNumber });
             });
         }, pollConfig.interval);
         finishRun();
       }
     } catch (error) {
       console.error("Error running step", error);
-      setRunEnded({flowId: flowName, stepId: stepNumber});
+      setRunEnded({ flowId: flowName, stepId: stepNumber });
       setIsStepRunning(false);
       if (error.response && error.response.data && (error.response.data.message.includes("The total size of all files in a single upload must be 100MB or less.") || error.response.data.message.includes("Uploading files to server failed"))) {
         setUploadError(error.response.data.message);
@@ -371,7 +373,7 @@ const Run = (props) => {
       <div className={styles.runContainer}>
         {
           canAccessRun ?
-            [
+            <>
               <div className={styles.intro} key={"run-intro"}>
                 <p>{tiles.run.intro}</p>
                 {/* ---------------------------------------------------------------------------------------- */}
@@ -380,7 +382,7 @@ const Run = (props) => {
                   <div className={styles.runningLabel}>Running...</div>
                 </div> */}
                 {/* ---------------------------------------------------------------------------------------- */}
-              </div>,
+              </div>
               <Flows
                 key={"run-flows-list"}
                 flows={flows}
@@ -406,7 +408,8 @@ const Run = (props) => {
                 setOpenJobResponse={setOpenJobResponse}
                 isStepRunning={isStepRunning}
                 canUserStopFlow={userCanStopFlow}
-              />]
+              />
+            </>
             :
             <p>{MissingPagePermission}</p>
         }

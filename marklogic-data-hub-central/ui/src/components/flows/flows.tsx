@@ -71,7 +71,7 @@ const Flows: React.FC<Props> = ({
   isStepRunning,
   canUserStopFlow,
 }) => {
-
+  console.log("Flows render")
   // Setup for file upload
   const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
     noClick: true,
@@ -112,22 +112,23 @@ const Flows: React.FC<Props> = ({
   const [selectedStepOptions, setSelectedStepOptions] = useState<any>({}); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [currentFlowName, setCurrentFlowName] = useState(""); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [arrayLoadChecksSteps, setArrayLoadChecksSteps] = useState<any>([{flowName: "", stepNumber: -1}]);
-  const [selectedStepDetails, setSelectedStepDetails] = useState<any>([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
-  const [flowsDeepCopy, setFlowsDeepCopy] = useState<any>([]);
+  const [allSelectedSteps, setAllSelectedSteps] = useState<any>([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
   const [checkAll, setCheckAll] = useState({});
   const location = useLocation();
 
+  useEffect(()=>{console.log("All selected steps",allSelectedSteps)},[allSelectedSteps])
   // maintain a list of panel refs
   const flowPanelsRef: any = flows.reduce((p, n) => ({...p, ...{[n.name]: createRef()}}), {});
 
-  // Persists active keys in session storage as a user interacts with them
-  useEffect(() => {
-    if (activeKeys === undefined) {
-      return;
-    }
-    const newStorage = {...storage, run: {...storage.run, openFlows: activeKeys}};
-    setViewSettings(newStorage);
-  }, [activeKeys]);
+  /* // Persists active keys in session storage as a user interacts with them
+    useEffect(() => {
+      if (activeKeys === undefined) {
+        return;
+      }
+      const newStorage = {...storage, run: {...storage.run, openFlows: activeKeys}};
+      setViewSettings(newStorage);
+    }, [activeKeys]);
+  */
 
   // If a step was just added scroll the flow step panel fully to the right
   useEffect(() => {
@@ -155,23 +156,6 @@ const Flows: React.FC<Props> = ({
         scrollToEnd(thisFlow);
         setExternalAddFlowDirty(false);
       }
-    }
-
-    if ((flows !== undefined || flows !== null)) {
-      setFlowsDeepCopy(_.cloneDeep(flows));
-      flows.map((flow) => (
-        flow?.steps && flow.steps.forEach((step) => {
-          controlsCheckboxes(step, step.stepDefinitionType?.toLowerCase(), flow.name);
-        })
-      ));
-
-    /*   //Getting local storage in the load of the page if it exists
-      if (getUserPreferencesLS() && getUserPreferencesLS()?.loadSelectedStepsUser) {
-        if (getUserPreferencesLS()?.selectedStepsDataUser && Object.keys(getUserPreferencesLS().selectedStepsDataUser?.selectedStepOptions).length !== 0) {
-          getLocalStorageDataUser();
-
-        }
-      } */
     }
   }, [flows]);
 
@@ -293,14 +277,14 @@ const Flows: React.FC<Props> = ({
       setStartRun(true);
     }
   }, [newStepToFlowOptions]);
-
+/* 
   useEffect(() => {
     //When Refreshing or leaving the page, save the flag to get the local storage
     return () => {
       //saveLocalStoragePreferences(true);
     };
   }, []);
-
+ */
   useEffect(() => {
     acceptedFiles.forEach(file => {
       setFileList(prevState => [...prevState, file]);
@@ -312,16 +296,14 @@ const Flows: React.FC<Props> = ({
   }, [acceptedFiles]);
 
   useEffect(() => {
-    customRequest();
+    uploadFiles();
   }, [fileList]);
-
 
   const OpenAddNewDialog = () => {
     setCreateAdd(false);
     setTitle("New Flow");
     setNewFlow(true);
   };
-
 
   const handleStepAdd = async (stepName: string, flowName: string, stepType: string) => {
     if (isStepInFlow(stepName, flowName)) {
@@ -347,47 +329,12 @@ const Flows: React.FC<Props> = ({
     setStepNumber(stepDetails.stepNumber);
   };
 
-  const onOk = (name) => {
+  const onDeleteFlowOk = (name) => {
     deleteFlow(name);
     setDialogVisible(false);
   };
 
   const onStepOk = (flowName, stepNumber) => {
-
-    // let stepToDrop = selectedStepDetails?.find(function (obj) {
-    //   if (
-    //     obj.flowName === flowName
-    //     && obj.stepNumber === stepNumber
-    //   ) return obj;
-    // });
-
-    // //Drop step
-    // let arrayObjectsStepDetails = selectedStepDetails;
-    // for (let i = 0; i < arrayObjectsStepDetails?.length; i++) {
-    //   if (arrayObjectsStepDetails[i]?.stepNumber === stepNumber && arrayObjectsStepDetails[i]?.flowName === flowName) { // checkedValues es step name
-    //     arrayObjectsStepDetails.splice(i, 1);
-    //   }
-    // }
-
-    // //Drop load check
-    // let arrayObjectsLoadChecksSteps = arrayLoadChecksSteps;
-    // if (stepToDrop && stepToDrop?.stepDefinitionType.toLowerCase() === "ingestion") {
-    //   for (let i = 0; i < arrayObjectsLoadChecksSteps?.length; i++) {
-    //     if (arrayObjectsLoadChecksSteps[i]?.stepNumber === stepNumber && arrayObjectsLoadChecksSteps[i]?.flowName === flowName) { // checkedValues es step name
-    //       arrayObjectsLoadChecksSteps.splice(i, 1);
-    //     }
-    //   }
-    // }
-
-    // let arraySelectedStepOptions = selectedStepOptions;
-    // delete arraySelectedStepOptions[flowName + "-" + stepToDrop?.stepName + "-" + stepToDrop?.stepDefinitionType?.toLowerCase()];
-    // const {[flowName + "-" + stepToDrop?.stepName + "-" + stepToDrop?.stepDefinitionType?.toLowerCase()]: foo, ...newObject} = arraySelectedStepOptions;
-
-    // setSelectedStepDetails(arrayObjectsStepDetails);
-    // setArrayLoadChecksSteps(arrayObjectsLoadChecksSteps);
-    // setSelectedStepOptions(newObject);
-
-    resetSelectedFlow(flowName);
     setStepDialogVisible(false);
     //saveLocalStoragePreferences(true, true);
     deleteStep(flowName, stepNumber);
@@ -429,128 +376,44 @@ const Flows: React.FC<Props> = ({
     open();
     setStartRun(false);
   };
+  
+  const handleArrayLoadChecksSteps = (flowNameCheck, stepName, stepNumber, stepDefinitionType, origin?) => {
+    let loadCheckStep;
+    let loadStep = arrayLoadChecksSteps.find((element) => element.flowName === flowNameCheck && element.checked === true);
 
-  const onCheckboxChange = (event, checkedValues?, stepNumber?, stepDefinitionType?, flowNames?, stepId?, sourceFormat?, fromCheckAll?) => {
-    let checkAllAux;
-    if (event !== "default" && fromCheckAll) {
-      checkAllAux = checkAll[flowNames] ? false : true;
-      setCheckAll((prevState) => ({...prevState, [flowNames]: checkAllAux}));
-    }
+    stepDefinitionType = stepDefinitionType ? stepDefinitionType.toLowerCase() : "";
 
-    if (checkAll[flowNames] && !fromCheckAll) {
-      setCheckAll((prevState) => ({...prevState, [flowNames]: !checkAll[flowNames]}));
-    }
+    let valueCheck = selectedStepOptions[flowNameCheck + "-" + stepName + "-" + stepDefinitionType.toLowerCase()] === true ? true : false;
 
-    if (currentFlowName !== flowNames) {
-      setCurrentFlowName(flowNames);
-    }
+    loadCheckStep = arrayLoadChecksSteps?.find(function (obj) {
+      if (obj?.stepId === flowNameCheck + "-" + stepName + "-" + stepDefinitionType) return true;
+    });
 
-    if (fromCheckAll) {
-      if (checkAll[flowNames]) {
-
-        let stepsSelectedFlow = selectedStepDetails.filter(function (obj) {
-          return obj.flowName === flowNames;
-        });
-
-        stepsSelectedFlow.forEach((obj) => {
-          let selectedStepOptionsAux = selectedStepOptions;
-          selectedStepOptionsAux[flowNames + "-" + obj.stepName + "-" + obj?.stepDefinitionType?.toLowerCase()] = false;
-          setSelectedStepOptions(selectedStepOptionsAux);
-        });
-
-        if (currentFlowName.length > 0) {
-          let selectedStepDetailsAux = selectedStepDetails.filter(function (obj) {
-            return obj.flowName !== flowNames && obj.stepName !== checkedValues;
-          });
-          setSelectedStepDetails(selectedStepDetailsAux);
-          selectedStepDetails.shift();
-        }
-
-        let arrayLoadChecksStepsAux = arrayLoadChecksSteps;
-        arrayLoadChecksStepsAux.map(function (obj) {
-          if (obj.flowName === flowNames) obj.checked = false;
-        });
-        setArrayLoadChecksSteps(arrayLoadChecksStepsAux);
-
-      } else {
-        {
-          flows.map((flow) => (
-            flow["name"] === flowNames &&
-            flow?.steps && flow.steps.forEach((step) => {
-              controlsCheckboxes(step, step.stepDefinitionType, flow.name);
-            })));
-
-        }
+    if (!loadStep) {
+      if (loadCheckStep) { loadCheckStep.checked = origin === "default" ? valueCheck : !valueCheck; } else
+      if (stepDefinitionType) {
+        loadCheckStep = {flowName: "", stepNumber: -1, checked: false};
+        loadCheckStep.flowName = flowNameCheck;
+        loadCheckStep.stepNumber = stepNumber;
+        loadCheckStep.checked = origin === "default" ? true : !valueCheck;
+        loadCheckStep.stepId = flowNameCheck + "-" + stepName + "-" + stepDefinitionType;
+        arrayLoadChecksSteps.push(loadCheckStep);
       }
     } else {
-
-      let originRender = event !== "default";
-      let data = {stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false, flowName: "", stepId: "", sourceFormat: ""};
-
-      data.stepName = checkedValues;
-      data.stepNumber = stepNumber;
-      data.stepDefinitionType = stepDefinitionType;
-      data.isChecked = originRender ? event.target.checked : true;
-      data.flowName = flowNames;
-      data.stepId = stepId;
-      data.sourceFormat = sourceFormat;
-
-
-
-      let obj = [...selectedStepDetails];
-      if (data.isChecked) {
-        let checkDuplicateObject = selectedStepDetails?.find((obj) => obj.stepId === data.stepId && obj.flowName === data.flowName);
-        const isLoadingStepAdded = selectedStepDetails.find((element) => element.flowName === data.flowName && element.stepDefinitionType.toLowerCase() === "ingestion");
-
-        if (!checkDuplicateObject) {
-          if (!isLoadingStepAdded || data.stepDefinitionType.toLowerCase() !== "ingestion") {
-            obj.push(data);
-          }
-        } else {
-          selectedStepDetails.map((obj) => {
-            if (obj.stepId === data.stepId && obj.flowName === data.flowName) {
-              obj.stepNumber = stepNumber;
-            }
-          });
-        }
-      } else {
-        for (let i = 0; i < obj.length; i++) {
-          if (obj[i].stepName === checkedValues) {
-            obj.splice(i, 1);
-          }
+      if (loadCheckStep && loadCheckStep.stepId === loadStep.stepId) { loadCheckStep.checked = origin === "default" ? valueCheck : !valueCheck; } else {
+        if (stepDefinitionType && !loadCheckStep) {
+          loadCheckStep = {flowName: "", stepNumber: -1, checked: false};
+          loadCheckStep.flowName = flowNameCheck;
+          loadCheckStep.stepNumber = stepNumber;
+          loadCheckStep.checked = origin === "default" ? false : !valueCheck;
+          loadCheckStep.stepId = flowNameCheck + "-" + stepName + "-" + stepDefinitionType;
+          arrayLoadChecksSteps.push(loadCheckStep);
         }
       }
-
-      if (originRender && stepDefinitionType.toLowerCase() === "ingestion") {
-        handleArrayLoadChecksSteps(flowNames, checkedValues, stepNumber, stepDefinitionType);
-      } else if (!originRender && stepDefinitionType.toLowerCase() === "ingestion") {
-        handleArrayLoadChecksSteps(flowNames, checkedValues, stepNumber, stepDefinitionType, "default");
-      }
-
-      setSelectedStepDetails(obj);
-
-      selectedStepOptions[flowNames + "-" + checkedValues + "-" + stepDefinitionType?.toLowerCase()] = data.isChecked;
-
-      const flowIngestionSteps = Object.keys(selectedStepOptions).filter((key) => key.includes("ingestion") && key.includes(flowNames));
-
-      if (flowIngestionSteps.length > 1 && stepDefinitionType?.toLowerCase() === "ingestion" && data.isChecked) {
-        flowIngestionSteps.forEach((key) => {
-          if (key !== flowNames + "-" + checkedValues + "-" + stepDefinitionType?.toLowerCase() && !selectedStepOptions[key]) {
-            selectedStepOptions[key] = !data.isChecked;
-          } else if (key === flowNames + "-" + checkedValues + "-" + stepDefinitionType?.toLowerCase()) {
-            selectedStepOptions[key] = data.isChecked;
-          } else if (selectedStepOptions[key]) {
-            selectedStepOptions[flowNames + "-" + checkedValues + "-" + stepDefinitionType?.toLowerCase()] = false;
-          }
-        });
-      }
-
-      setSelectedStepOptions({...selectedStepOptions, [flowNames + "-" + checkedValues + "-" + stepDefinitionType?.toLowerCase()]: originRender ? event.target.checked : true});
-
-      // saveLocalStoragePreferences(true, true);
-      if (originRender) event.stopPropagation();
+      setArrayLoadChecksSteps(arrayLoadChecksSteps);
     }
   };
+
   /* Commenting all local storage settings, to be refactored and readded
 
   const getLocalStorageDataUser = () => {
@@ -562,8 +425,8 @@ const Flows: React.FC<Props> = ({
       if (getUserPreferencesLS()?.selectedStepsDataUser?.arrayLoadChecksSteps) {
         setArrayLoadChecksSteps(getUserPreferencesLS().selectedStepsDataUser.arrayLoadChecksSteps);
       }
-      if (getUserPreferencesLS()?.selectedStepsDataUser?.selectedStepDetails) {
-        setSelectedStepDetails(getUserPreferencesLS().selectedStepsDataUser.selectedStepDetails);
+      if (getUserPreferencesLS()?.selectedStepsDataUser?.allSelectedSteps) {
+        setAllSelectedSteps(getUserPreferencesLS().selectedStepsDataUser.allSelectedSteps);
       }
     }
   };
@@ -606,7 +469,7 @@ const Flows: React.FC<Props> = ({
         let newSelectedStepsDataUser = {
           selectedStepOptions: selectedStepOptions,
           arrayLoadChecksSteps: arrayLoadChecksSteps,
-          selectedStepDetails: selectedStepDetails
+          allSelectedSteps: allSelectedSteps
         };
 
         newOptions = {
@@ -619,63 +482,6 @@ const Flows: React.FC<Props> = ({
     }
   }; */
 
-  let flagOneLoadSelected = true, flowNameCheckAux = "";
-  const handleArrayLoadChecksSteps = (flowNameCheck, stepName, stepNumber, stepDefinitionType, origin?) => {
-    let loadCheckStep;
-    let loadStep = arrayLoadChecksSteps.find((element) => element.flowName === flowNameCheck && element.checked === true);
-
-    stepDefinitionType = stepDefinitionType ? stepDefinitionType.toLowerCase() : "";
-
-    let valueCheck = selectedStepOptions[flowNameCheck + "-" + stepName + "-" + stepDefinitionType.toLowerCase()] === true ? true : false;
-
-    loadCheckStep = arrayLoadChecksSteps?.find(function (obj) {
-      if (obj?.stepId === flowNameCheck + "-" + stepName + "-" + stepDefinitionType) return true;
-    });
-
-    if (!loadStep) {
-      if (loadCheckStep) { loadCheckStep.checked = origin === "default" ? valueCheck : !valueCheck; } else
-      if (stepDefinitionType) {
-        loadCheckStep = {flowName: "", stepNumber: -1, checked: false};
-        loadCheckStep.flowName = flowNameCheck;
-        loadCheckStep.stepNumber = stepNumber;
-        loadCheckStep.checked = origin === "default" ? true : !valueCheck;
-        loadCheckStep.stepId = flowNameCheck + "-" + stepName + "-" + stepDefinitionType;
-        arrayLoadChecksSteps.push(loadCheckStep);
-      }
-    } else {
-      if (loadCheckStep && loadCheckStep.stepId === loadStep.stepId) { loadCheckStep.checked = origin === "default" ? valueCheck : !valueCheck; } else {
-        if (stepDefinitionType && !loadCheckStep) {
-          loadCheckStep = {flowName: "", stepNumber: -1, checked: false};
-          loadCheckStep.flowName = flowNameCheck;
-          loadCheckStep.stepNumber = stepNumber;
-          loadCheckStep.checked = origin === "default" ? false : !valueCheck;
-          loadCheckStep.stepId = flowNameCheck + "-" + stepName + "-" + stepDefinitionType;
-          arrayLoadChecksSteps.push(loadCheckStep);
-        }
-      }
-      setArrayLoadChecksSteps(arrayLoadChecksSteps);
-    }
-  };
-
-  const controlsCheckboxes = (step, stepDefinition, flowNameCheck) => {
-
-    if (flowNameCheckAux !== flowNameCheck) { flowNameCheckAux = flowNameCheck; flagOneLoadSelected = true; }
-
-    if (stepDefinition.toLowerCase() === "ingestion") {
-      if (flagOneLoadSelected) {
-        if (flowNameCheckAux === flowNameCheck) {
-          flagOneLoadSelected = false;
-          onCheckboxChange("default", step.stepName, step.stepNumber, step.stepDefinitionType?.toLowerCase(), flowNameCheck, step.stepId, step.sourceFormat);
-        } else {
-          flagOneLoadSelected = true; flowNameCheckAux = flowNameCheck;
-        }
-      }
-      handleArrayLoadChecksSteps(flowNameCheck, step.stepName, step.stepNumber, step.stepDefinitionType?.toLowerCase(), "default");
-    } else {
-      onCheckboxChange("default", step.stepName, step.stepNumber, step.stepDefinitionType?.toLowerCase(), flowNameCheck, step.stepId, step.sourceFormat);
-    }
-  };
-
   const handleRunFlow = async (index, name) => {
     //setRunFlowClicked(true);
     //saveLocalStoragePreferences(false, true);
@@ -684,8 +490,9 @@ const Flows: React.FC<Props> = ({
     };
     setRunningFlow(name);
     let flag = false;
-    await selectedStepDetails.map(async step => {
-      if (step.stepDefinitionType.toLowerCase() === "ingestion" && step.flowName === name && step.isChecked) {
+    await allSelectedSteps[name].map(async step => {
+      console.log("Haber", step)
+      if (step.stepDefinitionType.toLowerCase() === "ingestion") {
         flag = true;
         setRunningStep(step);
         setSingleIngest(false);
@@ -693,25 +500,11 @@ const Flows: React.FC<Props> = ({
         await openFilePicker();
       }
     });
-    if (Object.keys(selectedStepOptions).length === 0 && selectedStepOptions.constructor === Object) {
-      flag = true;
-      await setKey();
-      await openFilePicker();
-    }
     if (!flag) {
-      let _selectedStepDetails= [...selectedStepDetails];
-      let _selectedSteps: Step[] = _selectedStepDetails.filter((step) => {
-        return (step.flowName === name && step.isChecked === true);
-      });
-
-      await runFlowSteps(name, _selectedSteps)
+      await runFlowSteps(name, allSelectedSteps[name])
         .then(() => {
-          // setSelectedStepOptions({});
-          // setSelectedStepDetails([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
-          // setArrayLoadChecksSteps([{flowName: "", stepNumber: -1}]);
         });
     }
-
   };
 
   const handleRunSingleStep = async (flowName, step) => {
@@ -719,7 +512,7 @@ const Flows: React.FC<Props> = ({
     await runStep(flowName, step);
   };
 
-  const customRequest = async () => {
+  const uploadFiles = async () => {
     const filenames = fileList.map(({name}) => name);
     if (filenames.length) {
       let fl = fileList;
@@ -736,49 +529,17 @@ const Flows: React.FC<Props> = ({
             setFileList([]);
           });
       } else {
-        let stepNumbers = [{}];
-
-        stepNumbers = selectedStepDetails.filter(function (step) {
-          return step.flowName === runningFlow && step.isChecked === true;
-        });
-
-        await runFlowSteps(runningFlow, stepNumbers, formData)
+        await runFlowSteps(runningFlow, allSelectedSteps[runningFlow], formData)
           .then(resp => {
             setShowUploadError(true);
             setFileList([]);
-            // setSelectedStepOptions({});
-            // setSelectedStepDetails([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
-            // setArrayLoadChecksSteps([{flowName: "", stepNumber: -1}]);
-            //setRunFlowClicked(false);
           });
       }
     }
   };
 
-  const resetSelectedFlow = (flowName) => {
-    let arrayObjectsStepDetails = [...selectedStepDetails];
-    const arrayObjectsStepDetailsAux = arrayObjectsStepDetails.filter((step) => {
-      return step.flowName === flowName;
-    });
-    setSelectedStepDetails(arrayObjectsStepDetailsAux);
-
-    let arrayObjectsLoadChecksSteps = [...arrayLoadChecksSteps];
-    for (let i = 0; i < arrayObjectsLoadChecksSteps?.length; i++) {
-      if (arrayObjectsLoadChecksSteps[i]?.flowName === flowName?.trim()) {
-        arrayObjectsLoadChecksSteps.splice(i, 1);
-      }
-    }
-    setArrayLoadChecksSteps(arrayObjectsLoadChecksSteps);
-
-    let arraySelectedStepOptions = {...selectedStepOptions};
-    for (let key in arraySelectedStepOptions) if (key.startsWith(flowName + "-")) delete arraySelectedStepOptions[key];
-    setSelectedStepOptions(arraySelectedStepOptions);
-
-
-
-  };
-
   const reorderFlow = (id, flowName, direction: ReorderFlowOrderDirection) => {
+    console.log("reorderFlow", flows)
     let flowNum = flows.findIndex((flow) => flow.name === flowName);
     let flowDesc = flows[flowNum]["description"];
     const stepList = flows[flowNum]["steps"];
@@ -809,9 +570,7 @@ const Flows: React.FC<Props> = ({
       _steps.push(newSteps[i].stepId);
     }
 
-    resetSelectedFlow(flowName);
     //saveLocalStoragePreferences(true, true);
-
 
     const reorderedList = [...newSteps];
     onReorderFlow(flowNum, reorderedList);
@@ -893,10 +652,9 @@ const Flows: React.FC<Props> = ({
               flow={flow}
               flowRunning={flowRunning}
               flows={flows}
-              flowsDeepCopy={flowsDeepCopy}
               steps={steps}
-              selectedSteps={selectedStepDetails}
-              selectedStepOptions={selectedStepOptions}
+              allSelectedSteps={allSelectedSteps}
+              setAllSelectedSteps={setAllSelectedSteps}
               runningStep={runningStep}
               isStepRunning={isStepRunning}
               latestJobData={latestJobData}
@@ -904,7 +662,6 @@ const Flows: React.FC<Props> = ({
               canWriteFlow={canWriteFlow}
               canUserStopFlow={canUserStopFlow}
               hasOperatorRole={hasOperatorRole}
-              checkAll={checkAll}
               getFlowWithJobInfo={getFlowWithJobInfo}
               openFilePicker={openFilePicker}
               handleRunSingleStep={handleRunSingleStep}
@@ -914,7 +671,6 @@ const Flows: React.FC<Props> = ({
               handleFlowDelete={handleFlowDelete}
               stopRun={stopRun}
               reorderFlow={reorderFlow}
-              onCheckboxChange={onCheckboxChange}
               getRootProps={getRootProps}
               getInputProps={getInputProps}
               showUploadError={showUploadError}
@@ -946,7 +702,7 @@ const Flows: React.FC<Props> = ({
             newStepToFlowOptions={newStepToFlowOptions}
             setOpenNewFlow={setOpenNewFlow}
           />
-          {deleteConfirmationModal(dialogVisible, flowName, onOk, onCancel)}
+          {deleteConfirmationModal(dialogVisible, flowName, onDeleteFlowOk, onCancel)}
           {deleteStepConfirmationModal(stepDialogVisible, stepName, stepNumber, flowName, onStepOk, onCancel)}
           {addStepConfirmationModal(addStepDialogVisible, onAddStepOk, onCancel, flowName, stepName, stepType, isStepInFlow)}
           {addExistingStepConfirmationModal(addExistingStepDialogVisible, stepName, flowName, onConfirmOk, onCancel)}
