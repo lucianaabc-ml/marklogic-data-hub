@@ -1,32 +1,31 @@
 import React, {useEffect, useState} from "react";
 import {Accordion, ButtonGroup, Card, Dropdown} from "react-bootstrap";
 import styles from "../flows.module.scss";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {PopoverRunSteps, RunToolTips, SecurityTooltips} from "@config/tooltips.config";
-import {HCTooltip, HCButton, HCCheckbox} from "@components/common";
-import {faTrashAlt} from "@fortawesome/free-regular-svg-icons";
-import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, XCircleFill} from "react-bootstrap-icons";
-import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
-import {ReorderFlowOrderDirection} from "../types";
-import FlowCard from "./flowCard";
-import {Flow, Step} from "../../../types/run-types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { PopoverRunSteps, RunToolTips, SecurityTooltips } from "@config/tooltips.config";
+import { HCTooltip, HCButton, HCCheckbox } from "@components/common";
+import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
+import { ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, XCircleFill } from "react-bootstrap-icons";
+import { faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle } from "@fortawesome/free-solid-svg-icons";
+import { ReorderFlowOrderDirection , SelectedSteps} from "../types";
+import StepCard from "./step-card";
+import { Flow, Step } from "../../../types/run-types";
 
 import {dynamicSortDates} from "@util/conversionFunctions";
 
 import sourceFormatOptions from "@config/formats.config";
 
-interface Props {
+export interface Props {
   idx: string;
   flowRef: React.RefObject<any>;
   flow: Flow;
   flowRunning: Flow;
   flows: Flow[];
-  steps: Step[];
-  allSelectedSteps: Step[];
+  steps: any;
+  allSelectedSteps: SelectedSteps;
   setAllSelectedSteps: React.Dispatch<any>;
-  runningStep: Step;
+  runningStep?: Step;
   isStepRunning: boolean;
-  arrayLoadChecksSteps: any;
   canWriteFlow: boolean;
   canUserStopFlow: boolean;
   hasOperatorRole: boolean;
@@ -92,7 +91,6 @@ const FlowPanel: React.FC<Props> = ({
   setActiveKeys,
   setJobId,
   getFlowWithJobInfo,
-  arrayLoadChecksSteps,
   setOpenJobResponse,
   setNewFlow,
   setFlowData,
@@ -143,6 +141,7 @@ const FlowPanel: React.FC<Props> = ({
         [flow.name]: [...selectedSteps]
       };
     });
+    
     if (flow.steps === undefined) return;
     if (selectedSteps.length === flow.steps.length - loadTypeCountAux + 1) {
       setAllChecked(true);
@@ -282,11 +281,6 @@ const FlowPanel: React.FC<Props> = ({
     }
 
     return disabledCheck;
-  };
-
-  const countLetters = (stepName) => {
-    let letterCount = stepName?.replace(/\s+/g, "").length;
-    return letterCount > 35;
   };
 
   const handlePanelInteraction = (key) => {
@@ -472,7 +466,7 @@ const FlowPanel: React.FC<Props> = ({
                           <HCCheckbox
                             tooltip={step.stepName}
                             placementTooltip={"top"}
-                            label={countLetters(step.stepName) ? step.stepName : undefined}
+                            label={step.stepName}
                             id={step.stepName}
                             value={step.stepName}
                             handleClick={() => handleCheck(step)}
@@ -548,7 +542,7 @@ const FlowPanel: React.FC<Props> = ({
           </Card.Header>
           <Accordion.Body className={styles.panelContent} ref={flowRef}>
             {flow.steps !== undefined && flow.steps?.map((step, i) => {
-              return <FlowCard
+              return <StepCard
                 key={i}
                 index={i}
                 step={step}

@@ -14,15 +14,10 @@ import styles from "./flows.module.scss";
 import {useDropzone} from "react-dropzone";
 import {deleteConfirmationModal, deleteStepConfirmationModal, addStepConfirmationModal, addExistingStepConfirmationModal} from "./confirmation-modals";
 import FlowPanel from "./flow-panel/flowPanel";
-
-enum ReorderFlowOrderDirection {
-  LEFT = "left",
-  RIGHT = "right"
-}
-
+import { ReorderFlowOrderDirection , SelectedSteps} from "./types";
 export interface Props {
   flows: Flow[];
-  steps: Step[];
+  steps: any;
   deleteFlow: any;
   createFlow: any;
   updateFlow: (name: any, description: any, steps: any) => Promise<void>;
@@ -71,7 +66,7 @@ const Flows: React.FC<Props> = ({
   isStepRunning,
   canUserStopFlow,
 }) => {
-  console.log("Flows render");
+  console.log("Flows render")
   // Setup for file upload
   const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
     noClick: true,
@@ -109,14 +104,10 @@ const Flows: React.FC<Props> = ({
   const [addFlowDirty, setAddFlowDirty] = useState({});
   const [addExternalFlowDirty, setExternalAddFlowDirty] = useState(true);
   const [hasQueriedInitialJobData, setHasQueriedInitialJobData] = useState(false);
-  const [selectedStepOptions, setSelectedStepOptions] = useState<any>({}); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const [currentFlowName, setCurrentFlowName] = useState(""); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const [arrayLoadChecksSteps, setArrayLoadChecksSteps] = useState<any>([{flowName: "", stepNumber: -1}]);
-  const [allSelectedSteps, setAllSelectedSteps] = useState<any>([{stepName: "", stepNumber: -1, stepDefinitionType: "", isChecked: false}]);
-  const [checkAll, setCheckAll] = useState({});
   const location = useLocation();
-
-  useEffect(() => { console.log("All selectedsteps", allSelectedSteps); }, [allSelectedSteps]);
+  
+  const [allSelectedSteps, setAllSelectedSteps] = useState<SelectedSteps>({});
+  useEffect(()=>{console.log("All selected steps",allSelectedSteps)},[allSelectedSteps])
   // maintain a list of panel refs
   const flowPanelsRef: any = flows.reduce((p, n) => ({...p, ...{[n.name]: createRef()}}), {});
 
@@ -245,26 +236,7 @@ const Flows: React.FC<Props> = ({
     }
   }, [steps]);
 
-  useEffect(() => {
-    if (flows && flows.length > 0) {
-      const auxObj = {};
-      flows.forEach((flow) => {
-        if (flow.steps === undefined) return;
-        if (flow.steps.find((step) => step.stepDefinitionType.toLowerCase() !== "ingestion" && !selectedStepOptions[flow.name + "-" + step.stepName + "-" + step.stepDefinitionType.toLowerCase()])) {
-          auxObj[flow.name] = false;
-        } else if (flow.steps.find((step) => step.stepDefinitionType.toLowerCase() === "ingestion" && selectedStepOptions[flow.name + "-" + step.stepName + "-" + step.stepDefinitionType.toLowerCase()])) {
-          auxObj[flow.name] = true;
-        } else if (flow.steps.find((step) => step.stepDefinitionType.toLowerCase() === "ingestion" && !selectedStepOptions[flow.name + "-" + step.stepName + "-" + step.stepDefinitionType.toLowerCase()])) {
-          auxObj[flow.name] = false;
-        } else {
-          auxObj[flow.name] = true;
-        }
-      });
-      setCheckAll(auxObj);
-    }
-  }, [flows, selectedStepOptions, setCheckAll]);
-
-  // Get the latest job info after a step (in a flow) run
+   // Get the latest job info after a step (in a flow) run
   useEffect(() => {
     let num = flows.findIndex((flow) => flow.name === runEnded.flowId);
     if (num >= 0) {
@@ -277,7 +249,7 @@ const Flows: React.FC<Props> = ({
       setStartRun(true);
     }
   }, [newStepToFlowOptions]);
-  /*
+/* 
   useEffect(() => {
     //When Refreshing or leaving the page, save the flag to get the local storage
     return () => {
@@ -377,45 +349,8 @@ const Flows: React.FC<Props> = ({
     setStartRun(false);
   };
 
-  //TODO: MB - Rehacer ----------------------------------------------
-  const handleArrayLoadChecksSteps = (flowNameCheck, stepName, stepNumber, stepDefinitionType, origin?) => {
-    let loadCheckStep;
-    let loadStep = arrayLoadChecksSteps.find((element) => element.flowName === flowNameCheck && element.checked === true);
-
-    stepDefinitionType = stepDefinitionType ? stepDefinitionType.toLowerCase() : "";
-
-    let valueCheck = selectedStepOptions[flowNameCheck + "-" + stepName + "-" + stepDefinitionType.toLowerCase()] === true ? true : false;
-
-    loadCheckStep = arrayLoadChecksSteps?.find(function (obj) {
-      if (obj?.stepId === flowNameCheck + "-" + stepName + "-" + stepDefinitionType) return true;
-    });
-
-    if (!loadStep) {
-      if (loadCheckStep) { loadCheckStep.checked = origin === "default" ? valueCheck : !valueCheck; } else
-      if (stepDefinitionType) {
-        loadCheckStep = {flowName: "", stepNumber: -1, checked: false};
-        loadCheckStep.flowName = flowNameCheck;
-        loadCheckStep.stepNumber = stepNumber;
-        loadCheckStep.checked = origin === "default" ? true : !valueCheck;
-        loadCheckStep.stepId = flowNameCheck + "-" + stepName + "-" + stepDefinitionType;
-        arrayLoadChecksSteps.push(loadCheckStep);
-      }
-    } else {
-      if (loadCheckStep && loadCheckStep.stepId === loadStep.stepId) { loadCheckStep.checked = origin === "default" ? valueCheck : !valueCheck; } else {
-        if (stepDefinitionType && !loadCheckStep) {
-          loadCheckStep = {flowName: "", stepNumber: -1, checked: false};
-          loadCheckStep.flowName = flowNameCheck;
-          loadCheckStep.stepNumber = stepNumber;
-          loadCheckStep.checked = origin === "default" ? false : !valueCheck;
-          loadCheckStep.stepId = flowNameCheck + "-" + stepName + "-" + stepDefinitionType;
-          arrayLoadChecksSteps.push(loadCheckStep);
-        }
-      }
-      setArrayLoadChecksSteps(arrayLoadChecksSteps);
-    }
-  };
-
   /* Commenting all local storage settings, to be refactored and readded
+
   const getLocalStorageDataUser = () => {
 
     if (getUserPreferencesLS()) {
@@ -453,7 +388,10 @@ const Flows: React.FC<Props> = ({
     return oldOptions;
   };
 
+
+
   const saveLocalStoragePreferences = (value: boolean, saveSelectedStepsDataUser?: boolean) => {
+
     const sessionUser = localStorage.getItem("dataHubUser");
     if (getUserPreferencesLS()) {
       let oldOptions = getUserPreferencesLS();
@@ -487,9 +425,8 @@ const Flows: React.FC<Props> = ({
     };
     setRunningFlow(name);
     let flag = false;
-    console.log("HANDLERUNFLOW", name, allSelectedSteps);
-
     await allSelectedSteps[name].map(async step => {
+      console.log("Haber", step)
       if (step.stepDefinitionType.toLowerCase() === "ingestion") {
         flag = true;
         setRunningStep(step);
@@ -536,17 +473,17 @@ const Flows: React.FC<Props> = ({
     }
   };
 
+  // Este no anda
   const reorderFlow = (id, flowName, direction: ReorderFlowOrderDirection) => {
-    console.log("reorderFlow", flows);
-    let flowNum = flows.findIndex((flow) => flow.name === flowName);
-    let flowDesc = flows[flowNum]["description"];
-    const stepList = flows[flowNum]["steps"];
-    if (stepList === undefined) return;
-    let newSteps = stepList;
+    console.log("reorderFlow", flows)
+    let flowIdx = flows.findIndex((flow) => flow.name === flowName);
+    const {steps, description} = flows[flowIdx]
+
+    if (steps === undefined) return;
+    let newSteps = [...steps];
 
     if (direction === ReorderFlowOrderDirection.RIGHT) {
-      if (id <= stepList.length - 2) {
-        newSteps = [...stepList];
+      if (id <= steps.length - 2) {
         const oldLeftStep = newSteps[id];
         const oldRightStep = newSteps[id + 1];
         newSteps[id] = oldRightStep;
@@ -554,7 +491,6 @@ const Flows: React.FC<Props> = ({
       }
     } else {
       if (id >= 1) {
-        newSteps = [...stepList];
         const oldLeftStep = newSteps[id - 1];
         const oldRightStep = newSteps[id];
         newSteps[id - 1] = oldRightStep;
@@ -566,13 +502,12 @@ const Flows: React.FC<Props> = ({
     for (let i = 0; i < newSteps.length; i++) {
       newSteps[i].stepNumber = String(i + 1);
       _steps.push(newSteps[i].stepId);
-    }
-
+    };
     //saveLocalStoragePreferences(true, true);
 
     const reorderedList = [...newSteps];
-    onReorderFlow(flowNum, reorderedList);
-    updateFlow(flowName, flowDesc, _steps);
+    onReorderFlow(flowIdx, reorderedList);
+    updateFlow(flowName, description, _steps);
 
   };
 
@@ -656,7 +591,6 @@ const Flows: React.FC<Props> = ({
               runningStep={runningStep}
               isStepRunning={isStepRunning}
               latestJobData={latestJobData}
-              arrayLoadChecksSteps={arrayLoadChecksSteps}
               canWriteFlow={canWriteFlow}
               canUserStopFlow={canUserStopFlow}
               hasOperatorRole={hasOperatorRole}

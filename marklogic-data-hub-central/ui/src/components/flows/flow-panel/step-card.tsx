@@ -9,36 +9,37 @@ import {StepDefinitionTypeTitles, ReorderFlowOrderDirection} from "../types";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {RunToolTips} from "@config/tooltips.config";
 import styles from "../flows.module.scss";
+import {Flow, Step} from "../../../types/run-types";
 import {AuthoritiesContext} from "@util/authorities";
 
-interface Props {
+export interface Props {
   index: number;
-  step: any;
-  flow: any;
-  openFilePicker: any;
-  setRunningStep: any;
-  setRunningFlow: any;
-  handleStepDelete: any;
-  handleRunSingleStep: any;
+  step: Step;
+  flow: Flow;
+  openFilePicker: ()=>void;
+  setRunningStep: React.Dispatch<any>;
+  setRunningFlow: React.Dispatch<any>;
+  handleStepDelete: (flowName: string, step: any)=>void;
+  handleRunSingleStep: (flowName: string, step: any)=>Promise<void>;
   latestJobData: any;
-  lastRunResponse: any;
-  reorderFlow: any;
+  lastRunResponse: (step: any, flow:any)=> JSX.Element | null;
+  reorderFlow: (id:string, flowName:string, direction:ReorderFlowOrderDirection)=>void;
   canWriteFlow: boolean;
   hasOperatorRole: boolean;
   getRootProps:any;
   getInputProps:any;
-  setSingleIngest: any;
-  showLinks: any;
-  setShowLinks: any;
-  setShowUploadError:any;
+  setSingleIngest: React.Dispatch<React.SetStateAction<any>>;
+  showLinks: string;
+  setShowLinks: React.Dispatch<React.SetStateAction<any>>;
+  setShowUploadError:React.Dispatch<React.SetStateAction<any>>;
   sourceFormatOptions: any;
-  runningStep: any;
-  flowRunning: any;
+  runningStep?: Step;
+  flowRunning: Flow;
   showUploadError: any;
-  uploadError: any;
+  uploadError: string;
 }
 
-const FlowCard: React.FC<Props> = ({index, step, flow, openFilePicker,
+const StepCard: React.FC<Props> = ({index, step, flow, openFilePicker,
   setRunningStep,
   setRunningFlow,
   handleStepDelete,
@@ -133,7 +134,7 @@ const FlowCard: React.FC<Props> = ({index, step, flow, openFilePicker,
                       icon={faArrowAltCircleLeft}
                       className={styles.reorderFlowLeft}
                       role="button"
-                      onClick={() => reorderFlow(index, flow.name, ReorderFlowOrderDirection.LEFT)}
+                      onClick={() => reorderFlow(index.toString(), flow.name, ReorderFlowOrderDirection.LEFT)}
                       onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flow.name, ReorderFlowOrderDirection.LEFT)}
                       tabIndex={0} />
                   </i>
@@ -144,7 +145,7 @@ const FlowCard: React.FC<Props> = ({index, step, flow, openFilePicker,
               <div className={styles.stepResponse}>
                 {stepWithJobDetail ? lastRunResponse(stepWithJobDetail, flow.name) : ""}
               </div>
-              {index < flow.steps.length - 1 && canWriteFlow &&
+              {(flow.steps && index < flow.steps.length - 1 && canWriteFlow) &&
                 <HCTooltip aria-label="icon: right" text="Move right" id="move-right-tooltip" placement="bottom" >
                   <i>
                     <FontAwesomeIcon
@@ -152,7 +153,7 @@ const FlowCard: React.FC<Props> = ({index, step, flow, openFilePicker,
                       icon={faArrowAltCircleRight}
                       className={styles.reorderFlowRight}
                       role="button"
-                      onClick={() => reorderFlow(index, flow.name, ReorderFlowOrderDirection.RIGHT)}
+                      onClick={() => reorderFlow(index.toString(), flow.name, ReorderFlowOrderDirection.RIGHT)}
                       onKeyDown={(e) => reorderFlowKeyDownHandler(e, index, flow.name, ReorderFlowOrderDirection.RIGHT)}
                       tabIndex={0} />
                   </i>
@@ -249,11 +250,11 @@ const FlowCard: React.FC<Props> = ({index, step, flow, openFilePicker,
           </div>
         </div>
         <div className={styles.uploadError}>
-          {showUploadError && flow.name === flowRunning.name && stepNumber === runningStep.stepNumber ? uploadError : ""}
+          {showUploadError && flow.name === flowRunning.name && stepNumber === runningStep?.stepNumber ? uploadError : ""}
         </div>
       </HCCard>
     </div>
   );
 };
 
-export default FlowCard;
+export default StepCard;

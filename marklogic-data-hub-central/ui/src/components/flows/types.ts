@@ -1,4 +1,7 @@
 
+
+import { Flow, Step } from "../../types/run-types";
+
 export enum ReorderFlowOrderDirection {
     LEFT = "left",
     RIGHT = "right"
@@ -18,3 +21,6 @@ export const StepDefinitionTypeTitles = {
   "CUSTOM": "Custom",
   "custom": "Custom"
 };
+
+
+export type SelectedSteps = Record<string, Step[]>
