@@ -24,7 +24,6 @@ const Statuses = {
   "FINISHED_WITH_ERRORS": "finished_with_errors"
 };
 const Run = (props) => {
-  console.log("Run");
   const {handleError} = useContext(UserContext);
   const {setErrorMessageOptions} = useContext(ErrorMessageContext);
   const [isLoading, setIsLoading] = useState(false);
@@ -237,7 +236,6 @@ const Run = (props) => {
   };
 
   const runFlowSteps = async (flowName: string, steps: Step[], formData: any) => {
-    console.log("runFlowSteps", flowName, steps);
     setIsStepRunning(true);
     let stepNumbers: string[] = steps.map((step) => {
       return step.stepNumber;

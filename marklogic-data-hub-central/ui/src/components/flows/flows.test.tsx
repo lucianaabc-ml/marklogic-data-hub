@@ -9,7 +9,7 @@ import {Flow} from "../../types/run-types";
 import axiosMock from "axios";
 import data from "../../assets/mock-data/curation/flows.data";
 import Flows, {Props} from "./flows";
-import {SecurityTooltips, RunToolTips} from "../../config/tooltips.config";
+import {SecurityTooltips} from "../../config/tooltips.config";
 // import {getViewSettings} from "../../util/user-context";
 
 jest.mock("axios");
@@ -76,7 +76,7 @@ describe("Flows component", () => {
     const {getByText} = render(
       <Router history={history}>
         <Flows {...flowsProps}
-          flows={allKindsOfIngestInAFlow as Flow[]} 
+          flows={allKindsOfIngestInAFlow as Flow[]}
         />
       </Router>);
     let flowButton = document.querySelector(".accordion-button")!;
@@ -88,17 +88,14 @@ describe("Flows component", () => {
   });
 
   it("user with flow read, write, and operator privileges can view, edit, and run", async () => {
-    const {getByText, getByLabelText, getAllByText} = render(
+    const {getByText, getByLabelText} = render(
       <Router history={history}><Flows
         {...flowsProps}
       /></Router>
     );
 
-    let flowButton = document.querySelector(".accordion-button")!;
     expect(getByText(flowName)).toBeInTheDocument();
     expect(getByLabelText("create-flow")).toBeInTheDocument();
-  
-
   });
 
   it("user without flow write privileges cannot edit", async () => {
@@ -221,13 +218,13 @@ describe("Flows component", () => {
     expect(getByLabelText("leftArrow-"+flowStepName)).toBeInTheDocument();
 
     // First step only has right arrow, and no left arrow
-        // @ts-ignore
+    // @ts-ignore
     const firstFlowStep = data.flows.data[0].steps[0].stepName;
     expect(getByLabelText("rightArrow-"+firstFlowStep)).toBeInTheDocument();
     expect(queryByLabelText("leftArrow-"+firstFlowStep)).not.toBeInTheDocument();
 
     // Last step only has left arrow, and no right arrow
-        // @ts-ignore
+    // @ts-ignore
     const lastFlowStep = data.flows.data[0].steps[data.flows.data[0].steps.length-1].stepName;
     expect(getByLabelText("leftArrow-"+lastFlowStep)).toBeInTheDocument();
     expect(queryByLabelText("rightArrow-"+lastFlowStep)).not.toBeInTheDocument();
@@ -248,7 +245,7 @@ describe("Flows component", () => {
     expect(queryByLabelText("rightArrow-"+flowStepName)).not.toBeInTheDocument();
     expect(queryByLabelText("leftArrow-"+flowStepName)).not.toBeInTheDocument();
   });
-;
+
 });
 
 /*  Commenting Local Storage testing util local storage functionality is re added

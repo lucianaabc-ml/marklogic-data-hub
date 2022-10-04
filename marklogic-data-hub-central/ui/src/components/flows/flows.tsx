@@ -1,20 +1,19 @@
 import "./flows.scss";
 
-import * as _ from "lodash";
 import {HCButton, HCTooltip} from "@components/common";
 import {useLocation} from "react-router-dom";
 import {SecurityTooltips} from "@config/tooltips.config";
 import React, {createRef, useEffect, useState} from "react";
-import {getViewSettings, setViewSettings} from "@util/user-context";
+import {getViewSettings} from "@util/user-context";
 // import {getUserPreferences, updateUserPreferences} from "../../../src/services//user-preferences";
-import {Flow, Step} from "../../types/run-types";
+import {Flow} from "../../types/run-types";
 import NewFlowDialog from "./new-flow-dialog/new-flow-dialog";
 import axios from "axios";
 import styles from "./flows.module.scss";
 import {useDropzone} from "react-dropzone";
 import {deleteConfirmationModal, deleteStepConfirmationModal, addStepConfirmationModal, addExistingStepConfirmationModal} from "./confirmation-modals";
 import FlowPanel from "./flow-panel/flowPanel";
-import { ReorderFlowOrderDirection , SelectedSteps} from "./types";
+import {ReorderFlowOrderDirection, SelectedSteps} from "./types";
 export interface Props {
   flows: Flow[];
   steps: any;
@@ -66,7 +65,6 @@ const Flows: React.FC<Props> = ({
   isStepRunning,
   canUserStopFlow,
 }) => {
-  console.log("Flows render")
   // Setup for file upload
   const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
     noClick: true,
@@ -105,9 +103,8 @@ const Flows: React.FC<Props> = ({
   const [addExternalFlowDirty, setExternalAddFlowDirty] = useState(true);
   const [hasQueriedInitialJobData, setHasQueriedInitialJobData] = useState(false);
   const location = useLocation();
-  
+
   const [allSelectedSteps, setAllSelectedSteps] = useState<SelectedSteps>({});
-  useEffect(()=>{console.log("All selected steps",allSelectedSteps)},[allSelectedSteps])
   // maintain a list of panel refs
   const flowPanelsRef: any = flows.reduce((p, n) => ({...p, ...{[n.name]: createRef()}}), {});
 
@@ -236,7 +233,7 @@ const Flows: React.FC<Props> = ({
     }
   }, [steps]);
 
-   // Get the latest job info after a step (in a flow) run
+  // Get the latest job info after a step (in a flow) run
   useEffect(() => {
     let num = flows.findIndex((flow) => flow.name === runEnded.flowId);
     if (num >= 0) {
@@ -426,7 +423,6 @@ const Flows: React.FC<Props> = ({
     setRunningFlow(name);
     let flag = false;
     await allSelectedSteps[name].map(async step => {
-      console.log("Haber", step)
       if (step.stepDefinitionType.toLowerCase() === "ingestion") {
         flag = true;
         setRunningStep(step);
@@ -473,11 +469,9 @@ const Flows: React.FC<Props> = ({
     }
   };
 
-  // Este no anda
   const reorderFlow = (id, flowName, direction: ReorderFlowOrderDirection) => {
-    console.log("reorderFlow", flows)
     let flowIdx = flows.findIndex((flow) => flow.name === flowName);
-    const {steps, description} = flows[flowIdx]
+    const {steps, description} = flows[flowIdx];
 
     if (steps === undefined) return;
     let newSteps = [...steps];
@@ -502,13 +496,12 @@ const Flows: React.FC<Props> = ({
     for (let i = 0; i < newSteps.length; i++) {
       newSteps[i].stepNumber = String(i + 1);
       _steps.push(newSteps[i].stepId);
-    };
+    }
     //saveLocalStoragePreferences(true, true);
 
     const reorderedList = [...newSteps];
     onReorderFlow(flowIdx, reorderedList);
     updateFlow(flowName, description, _steps);
-
   };
 
   const getFlowWithJobInfo = async (flowNum) => {

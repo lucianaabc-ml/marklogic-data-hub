@@ -1,15 +1,15 @@
 import React, {useEffect, useState} from "react";
 import {Accordion, ButtonGroup, Card, Dropdown} from "react-bootstrap";
 import styles from "../flows.module.scss";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { PopoverRunSteps, RunToolTips, SecurityTooltips } from "@config/tooltips.config";
-import { HCTooltip, HCButton, HCCheckbox } from "@components/common";
-import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
-import { ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, XCircleFill } from "react-bootstrap-icons";
-import { faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle } from "@fortawesome/free-solid-svg-icons";
-import { ReorderFlowOrderDirection , SelectedSteps} from "../types";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {PopoverRunSteps, RunToolTips, SecurityTooltips} from "@config/tooltips.config";
+import {HCTooltip, HCButton, HCCheckbox} from "@components/common";
+import {faTrashAlt} from "@fortawesome/free-regular-svg-icons";
+import {ChevronDown, ExclamationCircleFill, GearFill, PlayCircleFill, XCircleFill} from "react-bootstrap-icons";
+import {faBan, faCheckCircle, faClock, faInfoCircle, faStopCircle} from "@fortawesome/free-solid-svg-icons";
+import {ReorderFlowOrderDirection, SelectedSteps} from "../types";
 import StepCard from "./step-card";
-import { Flow, Step } from "../../../types/run-types";
+import {Flow, Step} from "../../../types/run-types";
 
 import {dynamicSortDates} from "@util/conversionFunctions";
 
@@ -96,9 +96,7 @@ const FlowPanel: React.FC<Props> = ({
   setFlowData,
   setTitle
 }) => {
-  console.log("Flow Panel ", flow);
   const [showLinks, setShowLinks] = useState("");
-  const [loadTypeCount, setLoadTypeCount] = useState(0);
 
   const handleLoadStepInArray = (arraySteps) => {
     return arraySteps?.find(stepAux => stepAux?.stepDefinitionType.toLowerCase() === "ingestion");
@@ -111,7 +109,6 @@ const FlowPanel: React.FC<Props> = ({
 
     for (let i = 0; i < flow?.steps?.length; i++) {
       let step = flow.steps[i];
-      console.log("STEP---> ", flow.steps, step);
       if (step?.stepDefinitionType?.toLowerCase() === "ingestion") {
         loadTypeCountAux++;
         skipStep = handleLoadStepInArray(stepsByDefault);
@@ -132,8 +129,6 @@ const FlowPanel: React.FC<Props> = ({
   let titleTypeStep; let currentTitle = "";
   let mapTypeSteps = new Map([["mapping", "Mapping"], ["merging", "Merging"], ["custom", "Custom"], ["mastering", "Mastering"], ["ingestion", "Loading"]]);
 
-
-
   useEffect(() => {
     setAllSelectedSteps(prevState => {
       return {
@@ -141,7 +136,7 @@ const FlowPanel: React.FC<Props> = ({
         [flow.name]: [...selectedSteps]
       };
     });
-    
+
     if (flow.steps === undefined) return;
     if (selectedSteps.length === flow.steps.length - loadTypeCountAux + 1) {
       setAllChecked(true);
@@ -149,10 +144,6 @@ const FlowPanel: React.FC<Props> = ({
       setAllChecked(false);
     }
   }, [selectedSteps]);
-
-  // useEffect(() => {
-  //   console.log("all checked", allChecked)
-  // }, [allChecked])
 
   const handleCheckAll = (event) => {
     if (flow.steps === undefined) return;
@@ -174,7 +165,6 @@ const FlowPanel: React.FC<Props> = ({
       newSelectedSteps = newSelectedSteps.filter((stepAux) => {
         return stepAux.stepName !== step.stepName;
       });
-      console.log("AGREGANDO SI ");
       setSelectedSteps(newSelectedSteps);
     } else {
       // if not selected, select
@@ -390,8 +380,6 @@ const FlowPanel: React.FC<Props> = ({
   const panelActions = (name, i) => {
     const flow = flows.filter((flow) => flow.name === name)[0];
     if (flow === undefined) return;
-
-    console.log("FLOW ===> ", flow);
     return (<div
       className={styles.panelActionsContainer}
       id="panelActions"
@@ -455,13 +443,11 @@ const FlowPanel: React.FC<Props> = ({
               {/* This is working weird */}
               {flows.filter((flow) => flow.name === name)[0]?.steps?.sort((a, b) => a.stepDefinitionType?.toLowerCase()?.localeCompare(b.stepDefinitionType?.toLowerCase())).map((step, index) => {
 
-                //{ console.log("STEP ---> ", step) }
                 return (
                   <div key={index}>
                     <div className={styles.titleTypeStep}>{handleTitleSteps(step?.stepDefinitionType?.toLowerCase())}</div>
                     <div key={index} className={styles.divItem}>
-                      {/* <HCTooltip text={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step, name) ? RunToolTips.loadStepRunFlow : "" : ""} placement="left" id={`tooltip`}> */}
-                      <HCTooltip text={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step/*, name*/) ? RunToolTips.loadStepRunFlow : "" : ""} placement="left" id={`tooltip`}>
+                      <HCTooltip text={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step) ? RunToolTips.loadStepRunFlow : "" : ""} placement="left" id={`tooltip`}>
                         <div className="divCheckBoxStep">
                           <HCCheckbox
                             tooltip={step.stepName}
@@ -470,9 +456,8 @@ const FlowPanel: React.FC<Props> = ({
                             id={step.stepName}
                             value={step.stepName}
                             handleClick={() => handleCheck(step)}
-                            checked={isStepSelected(/*step*/step.stepName)}
-                            // disabled={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step, name) : false}
-                            disabled={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step/*, name*/) : false}
+                            checked={isStepSelected(step.stepName)}
+                            disabled={step.stepDefinitionType.toLowerCase() === "ingestion" ? controlDisabled(step) : false}
                             removeMargin={true}
                           >{step.stepName}
                           </HCCheckbox></div></HCTooltip>

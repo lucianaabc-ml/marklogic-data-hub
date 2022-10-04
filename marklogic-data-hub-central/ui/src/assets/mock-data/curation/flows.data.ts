@@ -1,5 +1,5 @@
 import commonData from "./common.data";
-import {Flow, Step} from "../../../types/run-types";
+import {Flow} from "../../../types/run-types";
 
 const response = {"data": {"jobId": "350da405-c1e9-4fa7-8269-d9aefe3b4b9a"}, "status": 200};
 
@@ -580,7 +580,7 @@ const flows: {data: Flow[], status: number} = {
         "stepDefinitionType": "merging",
         "targetEntityType": "http://example.org/Customer-0.0.1/Customer"
       },
-     
+
     ]
   },
   {
