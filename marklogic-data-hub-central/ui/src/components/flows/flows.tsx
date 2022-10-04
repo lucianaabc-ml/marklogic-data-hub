@@ -71,7 +71,7 @@ const Flows: React.FC<Props> = ({
   isStepRunning,
   canUserStopFlow,
 }) => {
-  console.log("Flows render")
+  console.log("Flows render");
   // Setup for file upload
   const {getRootProps, getInputProps, open, acceptedFiles} = useDropzone({
     noClick: true,
@@ -116,7 +116,7 @@ const Flows: React.FC<Props> = ({
   const [checkAll, setCheckAll] = useState({});
   const location = useLocation();
 
-  useEffect(()=>{console.log("All selected steps",allSelectedSteps)},[allSelectedSteps])
+  useEffect(() => { console.log("All selectedsteps", allSelectedSteps); }, [allSelectedSteps]);
   // maintain a list of panel refs
   const flowPanelsRef: any = flows.reduce((p, n) => ({...p, ...{[n.name]: createRef()}}), {});
 
@@ -277,7 +277,7 @@ const Flows: React.FC<Props> = ({
       setStartRun(true);
     }
   }, [newStepToFlowOptions]);
-/* 
+  /*
   useEffect(() => {
     //When Refreshing or leaving the page, save the flag to get the local storage
     return () => {
@@ -376,7 +376,8 @@ const Flows: React.FC<Props> = ({
     open();
     setStartRun(false);
   };
-  
+
+  //TODO: MB - Rehacer ----------------------------------------------
   const handleArrayLoadChecksSteps = (flowNameCheck, stepName, stepNumber, stepDefinitionType, origin?) => {
     let loadCheckStep;
     let loadStep = arrayLoadChecksSteps.find((element) => element.flowName === flowNameCheck && element.checked === true);
@@ -415,7 +416,6 @@ const Flows: React.FC<Props> = ({
   };
 
   /* Commenting all local storage settings, to be refactored and readded
-
   const getLocalStorageDataUser = () => {
 
     if (getUserPreferencesLS()) {
@@ -453,10 +453,7 @@ const Flows: React.FC<Props> = ({
     return oldOptions;
   };
 
-
-
   const saveLocalStoragePreferences = (value: boolean, saveSelectedStepsDataUser?: boolean) => {
-
     const sessionUser = localStorage.getItem("dataHubUser");
     if (getUserPreferencesLS()) {
       let oldOptions = getUserPreferencesLS();
@@ -490,8 +487,9 @@ const Flows: React.FC<Props> = ({
     };
     setRunningFlow(name);
     let flag = false;
+    console.log("HANDLERUNFLOW", name, allSelectedSteps);
+
     await allSelectedSteps[name].map(async step => {
-      console.log("Haber", step)
       if (step.stepDefinitionType.toLowerCase() === "ingestion") {
         flag = true;
         setRunningStep(step);
@@ -539,7 +537,7 @@ const Flows: React.FC<Props> = ({
   };
 
   const reorderFlow = (id, flowName, direction: ReorderFlowOrderDirection) => {
-    console.log("reorderFlow", flows)
+    console.log("reorderFlow", flows);
     let flowNum = flows.findIndex((flow) => flow.name === flowName);
     let flowDesc = flows[flowNum]["description"];
     const stepList = flows[flowNum]["steps"];
