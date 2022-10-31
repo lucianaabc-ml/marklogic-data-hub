@@ -4,7 +4,7 @@ import styles from "./new-flow-dialog.module.scss";
 import {NewFlowTooltips} from "@config/tooltips.config";
 import {useHistory} from "react-router-dom";
 import {QuestionCircleFill} from "react-bootstrap-icons";
-import {HCInput, HCButton, HCTooltip} from "@components/common";
+import {HCInput, HCButton, HCTooltip, HCModal} from "@components/common";
 import {themeColors} from "@config/themes.config";
 
 interface Props {
@@ -25,7 +25,7 @@ interface Props {
 const NewFlowDialog: React.FC<Props> = (props) => {
 
   const [flowName, setFlowName] = useState("");
-  const [description, setDescription] = useState(props.flowData && props.flowData !== {} ? props.flowData.description : "");
+  const [description, setDescription] = useState(props.flowData && props.flowData.description ? props.flowData.description : "");
 
   const [isFlowNameTouched, setFlowNameTouched] = useState(false);
 
@@ -130,9 +130,10 @@ const NewFlowDialog: React.FC<Props> = (props) => {
     }
   };
 
-  return (<Modal
+  return (<HCModal
     show={props.newFlow}
     dialogClassName={styles.modal700w}
+    onHide={onCancel}
   >
     <Modal.Header className={"bb-none"}>
       <span className={"fs-3"}>{props.title || "New Flow"}</span>
@@ -217,7 +218,7 @@ const NewFlowDialog: React.FC<Props> = (props) => {
         </Form>
       </div>
     </Modal.Body>
-  </Modal>);
+  </HCModal>);
 };
 
 export default NewFlowDialog;

@@ -61,7 +61,7 @@ const defaultProps: Props = {
   steps: data.steps.data,
   idx: 1,
   latestJobData: "",
-  allSelectedSteps: mockSelectedSteps,
+  getLSFlows: jest.fn(),
   setAllSelectedSteps: jest.fn(),
   openFilePicker: jest.fn(),
   setRunningStep: jest.fn(),
@@ -166,7 +166,6 @@ describe("Flow Panel test suite", () => {
         <FlowPanel
           {...defaultProps}
           flow={data.flows.data[0]}
-          allSelectedSteps={{}}
         /></Router>
     );
 
@@ -174,5 +173,6 @@ describe("Flow Panel test suite", () => {
     fireEvent.click(getByLabelText("stepSettings-testFlow"));
     fireEvent.click(getByTestId("select-all-toggle"));
     expect(getByText(RunToolTips.selectAStep)).toBeInTheDocument();
+    expect(getByTestId("runFlow-testFlow")).toBeDisabled();
   });
 });
